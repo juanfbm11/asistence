@@ -1,0 +1,147 @@
+{% extends 'webapplication/base.html' %}
+{% load static %}
+
+{% block title %}Código QR – Sistema de Asistencia QR{% endblock %}
+{% block nav_codeqr %}active{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'webapplication/css/codeqr.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="page">
+
+    <div class="page-header">
+        <div>
+            <a href="{% url 'clases' %}" class="back-link">← Volver a Clases</a>
+            <h1>📲 Código QR <span class="materia-chip" id="materiaNombre">Historia</span></h1>
+        </div>
+    </div>
+
+    <!-- Stats rápidas -->
+    <div class="stats-strip">
+        <div class="stat-mini">
+            <div class="stat-mini-val" id="escaneadosCount">0</div>
+            <div class="stat-mini-label">Escaneados</div>
+        </div>
+        <div class="stat-mini">
+            <div class="stat-mini-val soft" id="pendientesCount">28</div>
+            <div class="stat-mini-label">Pendientes</div>
+        </div>
+        <div class="stat-mini">
+            <div class="stat-mini-val green" id="pctCount">0%</div>
+            <div class="stat-mini-label">Asistencia</div>
+        </div>
+    </div>
+
+    <div class="main-grid">
+
+        <!-- QR Card -->
+        <div class="qr-card">
+            <div class="qr-card-top">
+                <h2>Código de Asistencia</h2>
+                <p>Muestra este QR a tus alumnos para que registren su asistencia</p>
+                <div class="meta-chips">
+                    <div class="meta-chip">📚 Historia</div>
+                    <div class="meta-chip">👥 28 alumnos</div>
+                    <div class="meta-chip">📍 Aula 12</div>
+                    <div class="live-badge"><div class="live-dot"></div> En vivo</div>
+                </div>
+            </div>
+
+            <div class="qr-display">
+                <!-- QR canvas generado por JS -->
+                <div class="qr-frame">
+                    <div class="qr-frame-inner" id="qrFrameInner">
+                        <div class="qr-corner tl"></div>
+                        <div class="qr-corner tr"></div>
+                        <div class="qr-corner bl"></div>
+                        <div class="qr-corner br"></div>
+                        <canvas id="qrCanvas" width="220" height="220"></canvas>
+                        <div class="qr-expired-overlay" id="expiredOverlay">
+                            <div style="font-size:36px">⏰</div>
+                            <h3>Código Expirado</h3>
+                            <p>Genera un nuevo código<br>para continuar</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Timer circular -->
+                <div class="timer-section">
+                    <div class="timer-label">Tiempo restante</div>
+                    <div class="timer-ring-wrap">
+                        <svg class="timer-ring" viewBox="0 0 100 100">
+                            <circle class="timer-ring-bg" cx="50" cy="50" r="45"/>
+                            <circle class="timer-ring-fill" id="ringFill" cx="50" cy="50" r="45"/>
+                        </svg>
+                        <div class="timer-ring-text" id="timerDisplay">2:00</div>
+                    </div>
+                    <div class="timer-bar-track">
+                        <div class="timer-bar-fill" id="timerBar"></div>
+                    </div>
+                </div>
+
+                <!-- Botones -->
+                <div class="qr-actions">
+                    <button class="qr-btn qr-btn-secondary" onclick="copiarLink()">🔗 Copiar enlace</button>
+                    <button class="qr-btn qr-btn-regen" onclick="regenerar()">🔄 Regenerar código</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Panel lateral -->
+        <div class="side-panel">
+            <div class="info-card">
+                <div class="info-card-header">📋 Información de la Clase</div>
+                <div class="info-card-body">
+                    <div class="info-row">
+                        <div class="info-label">🏛️ Materia</div>
+                        <div class="info-value">Historia</div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-label">👨‍🏫 Docente</div>
+                        <div class="info-value">Prof. Juan Pérez</div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-label">📅 Fecha</div>
+                        <div class="info-value" id="fechaHoy">—</div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-label">🕐 Hora</div>
+                        <div class="info-value" id="horaHoy">—</div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-label">📍 Aula</div>
+                        <div class="info-value">Aula 12</div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-label">🔑 Código sesión</div>
+                        <div class="info-value blue" id="codigoSesion">#HIS-001</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="info-card">
+                <div class="info-card-header" style="display:flex;align-items:center;justify-content:space-between">
+                    <span>✅ Alumnos Registrados</span>
+                    <span class="live-badge"><div class="live-dot"></div> <span id="escaneadosLabel">0 / 28</span></span>
+                </div>
+                <div class="info-card-body" style="padding:12px">
+                    <div class="scanned-list" id="scannedList">
+                        <div class="empty-state">
+                            <div style="font-size:32px;margin-bottom:8px">📱</div>
+                            <div>Esperando escaneos...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="{% static 'webapplication/js/codeqr.js' %}"></script>
+{% endblock %}

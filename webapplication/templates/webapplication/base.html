@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %} Sistema de Asistencia QR{% endblock %}</title>
+
+    <!-- Fuentes -->
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- CSS base compartido -->
+    <link rel="stylesheet" href="{% static 'webapplication/css/base.css' %}">
+
+    <!-- CSS extra por página (opcional) -->
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+<!--
+     HEADER
+ -->
+<header class="site-header">
+
+    <div class="header-main">
+        <a href="{% url 'inicio' %}" class="header-brand">
+            <div class="brand-icon">📱</div>
+            <div>
+                <div class="brand-name">Asistencia QR</div>
+                <div class="brand-sub">Sistema de gestión</div>
+            </div>
+        </a>
+
+        <div class="header-right">
+            <div class="notif-wrap">
+                <button class="header-icon-btn" title="Notificaciones">🔔</button>
+                <div class="notif-badge"></div>
+            </div>
+            <button class="header-icon-btn" title="Mensajes">✉️</button>
+            <button class="header-icon-btn" title="Configuración">⚙️</button>
+            <div class="header-divider"></div>
+            <div class="profile-chip">
+                <div class="profile-avatar">JP</div>
+                <div>
+                    <div class="profile-name">Juan Pérez</div>
+                    <div class="profile-role">Docente</div>
+                </div>
+                <span class="profile-arrow">▾</span>
+            </div>
+        </div>
+    </div>
+
+    <nav class="header-nav">
+        <a href="{% url 'inicio' %}"    class="nav-tab {% block nav_inicio %}{% endblock %}"> Inicio</a>
+        <a href="{% url 'clases' %}"    class="nav-tab {% block nav_clases %}{% endblock %}">Mis Clases <span class="nav-tab-badge">4</span></a>
+        <a href="{% url 'lista' %}"     class="nav-tab {% block nav_lista %}{% endblock %}">Alumnos</a>
+        <a href="{% url 'codeqr' %}"    class="nav-tab {% block nav_codeqr %}{% endblock %}"> Generar QR</a>
+        <a href="{% url 'reportes' %}"  class="nav-tab {% block nav_reportes %}{% endblock %}"> Reportes</a>
+    </nav>
+
+</header>
+
+
+<!-- ════════════════════════════════
+     CONTENIDO DE CADA PÁGINA
+════════════════════════════════ -->
+<main>
+    {% block content %}
+    {% endblock %}
+</main>
+
+
+<!-- ════════════════════════════════
+     FOOTER
+════════════════════════════════ -->
+<footer class="site-footer">
+
+    <div class="footer-main">
+
+        <div class="footer-brand">
+            <div class="footer-brand-row">
+                <div class="footer-brand-icon">📱</div>
+                <span class="footer-brand-name">Sistema de Asistencia QR</span>
+            </div>
+            <p class="footer-desc">
+                Plataforma para gestión de asistencia estudiantil mediante códigos QR.
+                Rápido, seguro y en tiempo real.
+            </p>
+            <div class="footer-status">
+                <div class="status-dot"></div>
+                <span>Sistema operativo</span>
+            </div>
+        </div>
+
+        <div class="footer-col">
+            <h4>Navegación</h4>
+            <div class="footer-links">
+                <a href="{% url 'inicio' %}"   class="footer-link">🏠 Inicio</a>
+                <a href="{% url 'clases' %}"   class="footer-link">📚 Mis Clases</a>
+                <a href="{% url 'lista' %}"    class="footer-link">👥 Alumnos</a>
+                <a href="{% url 'codeqr' %}"   class="footer-link">📲 Generar QR</a>
+                <a href="{% url 'reportes' %}" class="footer-link">📊 Reportes</a>
+            </div>
+        </div>
+
+        <div class="footer-col">
+            <h4>Herramientas</h4>
+            <div class="footer-links">
+                <a href="#" class="footer-link">📋 Lista de asistencia</a>
+                <a href="#" class="footer-link">📄 Exportar reporte</a>
+                <a href="#" class="footer-link">🔔 Notificaciones</a>
+                <a href="#" class="footer-link">⚙️ Configuración</a>
+            </div>
+        </div>
+
+        <div class="footer-col">
+            <h4>Soporte</h4>
+            <div class="footer-links">
+                <a href="#" class="footer-link">❓ Ayuda</a>
+                <a href="#" class="footer-link">📖 Manual de uso</a>
+                <a href="#" class="footer-link">✉️ Contacto</a>
+                <a href="#" class="footer-link">🔒 Privacidad</a>
+            </div>
+        </div>
+
+    </div>
+
+    <hr class="footer-divider">
+
+    <div class="footer-bottom">
+        <p class="footer-copy">© 2026 <strong>Sistema de Asistencia QR</strong> · Todos los derechos reservados</p>
+        <div class="footer-bottom-links">
+            <a href="#" class="footer-bottom-link">Términos de uso</a>
+            <a href="#" class="footer-bottom-link">Privacidad</a>
+        </div>
+        <div class="footer-version">v1.0.0</div>
+    </div>
+
+</footer>
+
+<!-- JS base compartido -->
+<script src="{% static 'webapplication/js/base.js' %}"></script>
+{% block extra_js %}{% endblock %}
+
+</body>
+</html>

@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+{% load static %}
+
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iniciar Sesión – Sistema de Asistencia QR</title>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --navy:       #0f2044;
+            --navy-mid:   #1a3460;
+            --blue:       #2255cc;
+            --blue-light: #3b74f5;
+            --accent:     #00d4a0;
+            --surface:    #f0f4fb;
+            --card-bg:    #ffffff;
+            --text:       #0f2044;
+            --text-mid:   #4a5878;
+            --text-soft:  #8a97b4;
+            --border:     #dde4f0;
+            --shadow-md:  0 8px 32px rgba(15,32,68,0.12);
+            --shadow-lg:  0 20px 60px rgba(15,32,68,0.2);
+            --green:      #00c49a;
+            --orange:     #f5a623;
+            --red:        #e8445a;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--navy);
+            min-height: 90vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: auto;
+            position: relative;
+        }
+
+        /* ── FONDO ANIMADO ── */
+        .bg-orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.18;
+            animation: float 8s ease-in-out infinite;
+        }
+
+        .bg-orb-1 {
+            width: 500px; height: 500px;
+            background: var(--blue-light);
+            top: -150px; left: -100px;
+            animation-delay: 0s;
+        }
+
+        .bg-orb-2 {
+            width: 400px; height: 400px;
+            background: var(--accent);
+            bottom: -100px; right: -80px;
+            animation-delay: -3s;
+        }
+
+        .bg-orb-3 {
+            width: 300px; height: 300px;
+            background: var(--blue);
+            top: 50%; right: 20%;
+            animation-delay: -5s;
+        }
+
+        /* Grid de puntos sutil */
+        .bg-grid {
+            position: absolute; inset: 0;
+            background-image: radial-gradient(rgba(255,255,255,0.06) 1px, transparent 1px);
+            background-size: 32px 32px;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50%       { transform: translateY(-30px) scale(1.05); }
+        }
+
+        /* ── CARD WRAPPER ── */
+        .login-wrapper {
+            position: relative; z-index: 10;
+            width: 100%; max-width: 480px;
+            padding: 20px;
+            animation: fadeUp 0.5s ease both;
+        }
+
+
+
+        /* ── CARD ── */
+        .login-card {
+            background: var(--card-bg);
+            border-radius: 5px;
+            box-shadow: var(--shadow-lg);
+            overflow: auto;
+
+        }
+
+        /* Card header */
+        .card-top {
+            background: linear-gradient(135deg, var(--blue-light) 0%, var(--navy-mid) 100%);
+            padding: 10PX 14PX ;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card-top::before {
+            content: '';
+            position: absolute; top: -40px; right: -40px;
+            width: 160px; height: 160px;
+            background: rgba(255,255,255,0.06);
+            border-radius: 50%;
+        }
+
+        .card-top::after {
+            content: '';
+            position: absolute; bottom: -50px; left: 30px;
+            width: 100px; height: 100px;
+            background: rgba(0,212,160,0.12);
+            border-radius: 50%;
+        }
+
+        .card-top h1 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 20px; font-weight: 700; color: white;
+            margin-bottom: 4px; position: relative; z-index: 1;
+        }
+
+        .card-top p {
+            font-size: 13px; color: rgba(255,255,255,0.55);
+            position: relative; z-index: 1;
+        }
+
+        /* Card body */
+        .card-body { padding: 20px 24px; }
+
+        /* ── SELECTOR DE ROL ── */
+        .role-label {
+            font-size: 11px; font-weight: 600; text-transform: uppercase;
+            letter-spacing: 0.08em; color: var(--text-soft); margin-bottom: 10px;
+        }
+
+        .role-grid {
+            display: grid; grid-template-columns: repeat(3, 1fr);
+            gap: 10px; margin-bottom: 24px;
+        }
+
+        .role-btn {
+            display: flex; flex-direction: column; align-items: center;
+            gap: 8px;
+            padding: 10px 8px;
+            border-radius: 14px;
+            border: 2px solid var(--border);
+            background: var(--surface);
+             cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.34,1.56,0.64,1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .role-btn::before {
+            content: ''; position: absolute; inset: 0;
+            background: var(--role-color, var(--blue-light));
+            opacity: 0; transition: opacity 0.2s;
+            border-radius: 12px;
+        }
+
+        .role-btn:hover { transform: translateY(-2px); border-color: var(--role-color, var(--blue-light)); }
+        .role-btn:hover::before { opacity: 0.06; }
+
+        .role-btn.selected {
+            border-color: var(--role-color, var(--blue-light));
+            background: white;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+            transform: translateY(-3px);
+        }
+
+        .role-btn.selected::before { opacity: 0.08; }
+
+        .role-name {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 12px; font-weight: 700; color: var(--text);
+            position: relative; z-index: 1; text-align: center;
+        }
+
+        .role-desc {
+            font-size: 10px; color: var(--text-soft);
+            position: relative; z-index: 1; text-align: center;
+            line-height: 1.3;
+        }
+
+        /* Check indicator */
+        .role-check {
+            position: absolute; top: 8px; right: 8px;
+            width: 18px; height: 18px; border-radius: 50%;
+            background: var(--role-color, var(--blue-light));
+            color: white; font-size: 10px; font-weight: 700;
+            display: none; align-items: center; justify-content: center;
+            z-index: 2;
+        }
+
+        .role-btn.selected .role-check { display: flex; }
+
+        /* Roles colors */
+        .role-admin    { --role-color: #e8445a; }
+        .role-profesor { --role-color: #3b74f5; }
+        .role-alumno   { --role-color: #00c49a; }
+
+        .role-admin    .role-icon-wrap { background: rgba(232,68,90,0.1); }
+        .role-profesor .role-icon-wrap { background: rgba(59,116,245,0.1); }
+        .role-alumno   .role-icon-wrap { background: rgba(0,196,154,0.1); }
+
+        /* ── FORM ── */
+        .divider {
+            display: flex; align-items: center; gap: 12px;
+            margin-bottom: 15px;
+        }
+
+        .divider-line { flex: 1; height: 1px; background: var(--border); }
+
+        .divider-text {
+            font-size: 11px; font-weight: 600; color: var(--text-soft);
+            text-transform: uppercase; letter-spacing: 0.06em;
+        }
+
+        .form-group { margin-bottom: 16px; }
+
+        .form-label {
+            display: block; font-size: 12px; font-weight: 600;
+            color: var(--text-mid); margin-bottom: 6px;
+        }
+
+        .input-wrap {
+            position: relative; display: flex; align-items: center;
+        }
+
+
+        .form-input {
+            width: 100%; padding: 12px 14px 12px 42px;
+            border: 1.5px solid var(--border); border-radius: 11px;
+            font-family: 'DM Sans', sans-serif; font-size: 14px;
+            color: var(--text); background: var(--surface);
+            outline: none; transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+        }
+
+        .form-input:focus {
+            border-color: var(--blue-light);
+            background: white;
+            box-shadow: 0 0 0 3px rgba(59,116,245,0.1);
+        }
+
+        .form-input::placeholder { color: var(--text-soft); }
+
+        /* Toggle password */
+        .toggle-pass {
+            position: absolute; right: 14px; cursor: pointer;
+            font-size: 16px; color: var(--text-soft);
+            transition: color 0.2s; user-select: none;
+        }
+        .toggle-pass:hover { color: var(--text); }
+
+        /* Forgot password */
+        .forgot-link {
+            display: block; text-align: right; font-size: 12px;
+            font-weight: 600; color: var(--blue-light);
+            text-decoration: none; margin-top: -10px; margin-bottom: 20px;
+            transition: color 0.2s;
+        }
+        .forgot-link:hover { color: var(--blue); }
+
+        /* ── SUBMIT BUTTON ── */
+        .submit-btn {
+            width: 100%; padding: 14px;
+            border-radius: 12px; border: none;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 15px; font-weight: 700;
+            color: white; cursor: pointer;
+            background: linear-gradient(135deg, var(--blue-light), var(--blue));
+            box-shadow: 0 4px 20px rgba(59,116,245,0.35);
+            transition: all 0.25s cubic-bezier(0.34,1.56,0.64,1);
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            position: relative; overflow: hidden;
+        }
+
+        .submit-btn::after {
+            content: '';
+            position: absolute; inset: 0;
+            background: rgba(255,255,255,0.1);
+            opacity: 0; transition: opacity 0.2s;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 28px rgba(59,116,245,0.45);
+        }
+
+        .submit-btn:hover::after { opacity: 1; }
+        .submit-btn:active { transform: translateY(0); }
+
+        /* Color del botón según rol */
+        .submit-btn.admin    { background: linear-gradient(135deg, #f06070, var(--red)); box-shadow: 0 4px 20px rgba(232,68,90,0.35); }
+        .submit-btn.admin:hover { box-shadow: 0 8px 28px rgba(232,68,90,0.45); }
+
+        .submit-btn.alumno   { background: linear-gradient(135deg, #00d4a0, #009c7a); box-shadow: 0 4px 20px rgba(0,196,154,0.35); }
+        .submit-btn.alumno:hover { box-shadow: 0 8px 28px rgba(0,196,154,0.45); }
+
+        /* ── MENSAJES DJANGO ── */
+        .django-messages { margin-bottom: 16px; }
+
+        .msg {
+            padding: 10px 14px; border-radius: 10px;
+            font-size: 13px; font-weight: 500;
+            display: flex; align-items: center; gap: 8px;
+            margin-bottom: 8px;
+        }
+        .msg.error   { background: rgba(232,68,90,0.1);  color: var(--red);    border-left: 3px solid var(--red); }
+        .msg.success { background: rgba(0,196,154,0.1);  color: var(--green);  border-left: 3px solid var(--green); }
+        .msg.warning { background: rgba(245,166,35,0.1); color: var(--orange); border-left: 3px solid var(--orange); }
+
+        /* ── FOOTER DE CARD ── */
+        .card-footer {
+            padding: 16px 32px;
+            background: var(--surface);
+            border-top: 1px solid var(--border);
+            text-align: center;
+            font-size: 12px; color: var(--text-soft);
+        }
+
+        .card-footer strong { color: var(--navy); }
+
+        /* ── ANIMATIONS ── */
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ── RESPONSIVE ── */
+        @media (max-width: 520px) {
+            .login-wrapper { padding: 16px; }
+            .card-body { padding: 22px 20px 24px; }
+            .card-top  { padding: 22px 20px 18px; }
+            .card-footer { padding: 14px 20px; }
+            .role-grid { gap: 8px; }
+            .role-btn  { padding: 12px 6px; }
+
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Fondo -->
+    <div class="bg-grid"></div>
+    <div class="bg-orb bg-orb-1"></div>
+    <div class="bg-orb bg-orb-2"></div>
+    <div class="bg-orb bg-orb-3"></div>
+
+    <div class="login-wrapper">
+
+        <!-- Card -->
+        <div class="login-card">
+
+            <div class="card-top">
+                <h1>Bienvenido</h1>
+            </div>
+
+            <div class="card-body">
+
+                <!-- Mensajes de error Django -->
+                {% if messages %}
+                <div class="django-messages">
+                    {% for message in messages %}
+                    <div class="msg {{ message.tags }}">
+                        {% if message.tags == 'error' %}❌{% elif message.tags == 'success' %}✅{% else %}⚠️{% endif %}
+                        {{ message }}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <!-- Selector de rol -->
+                <div class="role-label">¿Quién eres?</div>
+                <div class="role-grid">
+
+                    <button type="button" class="role-btn role-admin" onclick="seleccionarRol('administrador', this)">
+                        <div class="role-check">✓</div>
+                        <div class="role-name">Administrador</div>
+                        <div class="role-desc">Gestión</div>
+                    </button>
+
+                    <button type="button" class="role-btn role-profesor selected" onclick="seleccionarRol('profesor', this)">
+                        <div class="role-check">✓</div>
+                        <div class="role-name">Profesor</div>
+                        <div class="role-desc">Clases y QR</div>
+                    </button>
+
+                    <button type="button" class="role-btn role-alumno" onclick="seleccionarRol('alumno', this)">
+                        <div class="role-check">✓</div>
+                        <div class="role-name">Alumno</div>
+                        <div class="role-desc">Ver asistencia</div>
+                    </button>
+
+                </div>
+
+                <div class="divider">
+                    <div class="divider-line"></div>
+                    <span class="divider-text">Credenciales</span>
+                    <div class="divider-line"></div>
+                </div>
+
+                <!-- Formulario -->
+                <form method="POST" action="{% url 'login' %}" id="loginForm">
+                    {% csrf_token %}
+                    <input type="hidden" name="rol" id="rolInput" value="profesor">
+
+                    <div class="form-group">
+                        <label class="form-label" for="correo">Correo institucional</label>
+                        <div class="input-wrap">
+                            <span class="input-icon">✉️</span>
+                            <input
+                                type="correo"
+                                id="correo"
+                                name="correo"
+                                class="form-input"
+                                placeholder="usuario@institucion.edu.co"
+                                required
+                                autocomplete="email">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="password">Contraseña</label>
+                        <div class="input-wrap">
+                            <span class="input-icon">🔒</span>
+                            <input
+                                type="password"
+                                id="password"
+                                name="password"
+                                class="form-input"
+                                placeholder="••••••••"
+                                required
+                                autocomplete="current-password">
+                            <span class="toggle-pass" onclick="togglePassword()" id="toggleIcon">👁️</span>
+                        </div>
+                    </div>
+
+                    <a href="#" class="forgot-link">¿Olvidaste tu contraseña?</a>
+
+                    <button type="submit" class="submit-btn profesor" id="submitBtn">
+                        <span id="btnIcon">👨‍🏫</span>
+                        <span id="btnText">Ingresar como Profesor</span>
+                    </button>
+
+                </form>
+
+            </div>
+
+            <div class="card-footer">
+                Sistema de Asistencia QR · · 2026
+            </div>
+
+        </div>
+    </div>
+
+<script>
+// ── CONFIGURACIÓN POR ROL ──
+const roles = {
+    administrador: {
+        label:   'Administrador',
+        btnText: 'Ingresar como Administrador',
+        btnClass: 'admin',
+    },
+    profesor: {
+        label:   'Profesor',
+        btnText: 'Ingresar como Profesor',
+        btnClass: 'profesor',
+    },
+    alumno: {
+        label:   'Alumno',
+        btnText: 'Ingresar como Alumno',
+        btnClass: 'alumno',
+    },
+};
+
+let rolActual = 'profesor';
+
+function seleccionarRol(rol, btn) {
+    // Quitar selected de todos
+    document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('selected'));
+
+    // Marcar el seleccionado
+    btn.classList.add('selected');
+
+    // Actualizar input hidden
+    document.getElementById('rolInput').value = rol;
+    rolActual = rol;
+
+    // Actualizar botón submit
+    const cfg = roles[rol];
+    const submitBtn = document.getElementById('submitBtn');
+    submitBtn.className = 'submit-btn ' + cfg.btnClass;
+    document.getElementById('btnIcon').textContent = cfg.icon;
+    document.getElementById('btnText').textContent = cfg.btnText;
+}
+
+// ── TOGGLE PASSWORD ──
+function togglePassword() {
+    const input = document.getElementById('password');
+    const icon  = document.getElementById('toggleIcon');
+    if (input.type === 'password') {
+        input.type = 'text';
+    } else {
+        input.type = 'password';
+
+    }
+}
+
+// ── LOADING STATE ──
+document.getElementById('loginForm').addEventListener('submit', function() {
+    const btn = document.getElementById('submitBtn');
+    btn.innerHTML = '<span style="animation:spin 0.8s linear infinite;display:inline-block">⏳</span> Verificando...';
+    btn.style.opacity = '0.85';
+    btn.disabled = true;
+});
+</script>
+
+<style>
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+}
+</style>
+
+</body>
+</html>

@@ -1,0 +1,85 @@
+{% extends 'webapplication/base.html' %}
+{% load static %}
+
+{% block title %}Lista de Alumnos – Sistema de Asistencia QR{% endblock %}
+{% block nav_lista %}active{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'webapplication/css/lista.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="page">
+
+    <div class="page-header">
+        <div>
+            <a href="{% url 'inicio' %}" class="back-link">← Volver al inicio</a>
+            <h1>Lista de Alumnos <span class="materia-chip">Historia</span></h1>
+        </div>
+        <div class="header-controls">
+            <div class="date-input-wrap">
+                <label>📅 Fecha:</label>
+                <input type="date" id="fechaClase">
+            </div>
+        </div>
+    </div>
+
+    <!-- Resumen -->
+    <div class="summary-row">
+        <div class="summary-card">
+            <div class="s-label">Total Alumnos</div>
+            <div class="s-value navy" id="totalCount">5</div>
+            <div class="s-sub">en esta clase</div>
+        </div>
+        <div class="summary-card">
+            <div class="s-label">Presentes</div>
+            <div class="s-value green" id="presenteCount">0</div>
+            <div class="s-sub">hoy</div>
+        </div>
+        <div class="summary-card">
+            <div class="s-label">Ausentes</div>
+            <div class="s-value red" id="ausenteCount">0</div>
+            <div class="s-sub">hoy</div>
+        </div>
+        <div class="summary-card">
+            <div class="s-label">Justificados</div>
+            <div class="s-value orange" id="justificadoCount">0</div>
+            <div class="s-sub">hoy</div>
+        </div>
+    </div>
+
+    <!-- Tabla -->
+    <div class="main-card">
+        <div class="main-card-header">
+            <h3>👥 Registro de Asistencia</h3>
+            <div class="search-box">
+                <span>🔍</span>
+                <input type="text" placeholder="Buscar alumno..." id="searchInput" oninput="filtrar()">
+            </div>
+        </div>
+        <div style="overflow-x:auto">
+            <table id="tablaAlumnos">
+                <thead>
+                    <tr>
+                        <th>Alumno</th>
+                        <th>Correo</th>
+                        <th>Asistencia general</th>
+                        <th>Estado hoy</th>
+                        <th>Acción</th>
+                        <th>Historial</th>
+                    </tr>
+                </thead>
+                <tbody id="tbody"></tbody>
+            </table>
+        </div>
+        <div class="main-card-footer">
+            <button class="save-btn" onclick="guardar()">💾 Guardar registro</button>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'webapplication/js/lista.js' %}"></script>
+{% endblock %}

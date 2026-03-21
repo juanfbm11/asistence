@@ -1,0 +1,122 @@
+{% extends 'webapplication/base.html' %}
+{% load static %}
+
+{% block title %}Mis Clases – Sistema de Asistencia QR{% endblock %}
+{% block nav_clases %}active{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'webapplication/css/clases.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="page">
+
+    <div class="page-header">
+        <div>
+            <a href="{% url 'inicio' %}" class="back-link">← Volver al inicio</a>
+            <h1>📚 Mis Clases</h1>
+        </div>
+    </div>
+
+    <!-- Carnet compacto + Resumen -->
+    <div class="top-grid">
+        <div class="prof-card">
+            <div class="prof-card-header">
+                <div class="prof-badge">Docente Activo</div>
+                <div class="prof-avatar-row">
+                    <div class="prof-avatar">JP</div>
+                    <div>
+                        <div class="prof-name">Prof. Juan Pérez</div>
+                        <div class="prof-sub">Educación Superior</div>
+                    </div>
+                </div>
+            </div>
+            <div class="prof-card-body">
+                <div class="prof-info-list">
+                    <div class="prof-info-item">
+                        <div class="prof-info-icon">🏫</div>
+                        <div><div class="pil">Institución</div><div class="piv">Colegio San Martín</div></div>
+                    </div>
+                    <div class="prof-info-item">
+                        <div class="prof-info-icon">🆔</div>
+                        <div><div class="pil">ID Docente</div><div class="piv">#DOC-2024-047</div></div>
+                    </div>
+                    <div class="prof-info-item">
+                        <div class="prof-info-icon">📅</div>
+                        <div><div class="pil">Turno</div><div class="piv">Mañana · 7:00 – 13:00 hs</div></div>
+                    </div>
+                </div>
+                <div class="prof-stats">
+                    <div class="prof-stat"><div class="psv">110</div><div class="psl">Alumnos</div></div>
+                    <div class="prof-stat"><div class="psv">4</div><div class="psl">Materias</div></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="summary-col">
+            <div class="summary-top">
+                <div class="s-card">
+                    <div class="s-card-label">Total Clases</div>
+                    <div class="s-card-value navy">4</div>
+                    <div class="s-card-sub">este semestre</div>
+                </div>
+                <div class="s-card">
+                    <div class="s-card-label">Total Alumnos</div>
+                    <div class="s-card-value blue">110</div>
+                    <div class="s-card-sub">matriculados</div>
+                </div>
+                <div class="s-card">
+                    <div class="s-card-label">Asistencia</div>
+                    <div class="s-card-value green">91<span>%</span></div>
+                    <div class="s-card-sub">promedio</div>
+                </div>
+            </div>
+            <div class="filter-bar">
+                <div class="search-box">
+                    <span>🔍</span>
+                    <input type="text" placeholder="Buscar materia o código..." id="searchInput" oninput="filtrar()">
+                </div>
+                <select class="filter-select" id="sortSelect" onchange="filtrar()">
+                    <option value="nombre">Ordenar por nombre</option>
+                    <option value="alumnos">Ordenar por alumnos</option>
+                    <option value="codigo">Ordenar por código</option>
+                </select>
+                <div class="view-toggle">
+                    <button class="vtbtn active" id="vCards" onclick="setView('cards')">⊞ Tarjetas</button>
+                    <button class="vtbtn" id="vTable" onclick="setView('table')">☰ Tabla</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cards view -->
+    <div class="section-header">
+        <h2>📋 Clases Programadas</h2>
+    </div>
+
+    <div class="classes-grid" id="cardsView"></div>
+
+    <!-- Table view -->
+    <div class="main-card" id="tableView">
+        <div class="main-card-header"><h3>Todas las Clases</h3></div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Código</th><th>Materia</th><th>Alumnos</th><th>Asistencia</th><th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // URLs de Django pasadas a JS de forma segura
+    const URL_LISTA  = "{% url 'lista' %}";
+    const URL_CODEQR = "{% url 'codeqr' %}";
+</script>
+<script src="{% static 'webapplication/js/clases.js' %}"></script>
+{% endblock %}

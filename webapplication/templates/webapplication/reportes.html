@@ -1,0 +1,164 @@
+{% extends 'webapplication/base.html' %}
+{% load static %}
+
+{% block title %}Reportes – Sistema de Asistencia QR{% endblock %}
+{% block nav_reportes %}active{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'webapplication/css/reportes.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="page">
+
+    <div class="page-header">
+        <div>
+            <a href="{% url 'inicio' %}" class="back-link">← Volver al inicio</a>
+            <h1>📊 Reportes de Asistencia</h1>
+            <p>Análisis y estadísticas del período · Febrero 2024</p>
+        </div>
+        <button class="export-btn" onclick="exportar()">⬇️ Exportar reporte</button>
+    </div>
+
+    <!-- Filtros -->
+    <div class="filter-bar">
+        <span class="filter-label">Filtrar por:</span>
+        <select class="filter-select">
+            <option>Febrero 2024</option>
+            <option>Enero 2024</option>
+            <option>Diciembre 2023</option>
+        </select>
+        <select class="filter-select">
+            <option>Todas las materias</option>
+            <option>Historia</option>
+            <option>Matemáticas</option>
+            <option>Inglés</option>
+            <option>Ciencias</option>
+        </select>
+        <div style="display:flex;gap:6px">
+            <button class="filter-chip active" onclick="setChip(this)">Esta semana</button>
+            <button class="filter-chip" onclick="setChip(this)">Este mes</button>
+            <button class="filter-chip" onclick="setChip(this)">Semestre</button>
+        </div>
+    </div>
+
+    <!-- KPIs -->
+    <div class="kpi-row">
+        <div class="kpi-card blue">
+            <div class="kpi-icon">📚</div>
+            <div class="kpi-label">Clases dictadas</div>
+            <div class="kpi-value">18</div>
+            <div class="kpi-trend up">↑ +3 vs semana anterior</div>
+        </div>
+        <div class="kpi-card green">
+            <div class="kpi-icon">✅</div>
+            <div class="kpi-label">Asistencia promedio</div>
+            <div class="kpi-value">91%</div>
+            <div class="kpi-trend up">↑ +2% vs mes anterior</div>
+        </div>
+        <div class="kpi-card orange">
+            <div class="kpi-icon">⚠️</div>
+            <div class="kpi-label">Alumnos en riesgo</div>
+            <div class="kpi-value">7</div>
+            <div class="kpi-trend neutral">→ Sin cambio</div>
+        </div>
+        <div class="kpi-card red">
+            <div class="kpi-icon">❌</div>
+            <div class="kpi-label">Ausencias totales</div>
+            <div class="kpi-value">34</div>
+            <div class="kpi-trend down">↓ -5 vs semana anterior</div>
+        </div>
+    </div>
+
+    <!-- Gráficos fila 1 -->
+    <div class="two-col">
+        <div class="report-card">
+            <div class="card-header">
+                <h3>📊 Asistencia por Materia</h3>
+                <span class="card-label">% del período</span>
+            </div>
+            <div class="card-body">
+                <div class="bar-chart" id="barChart"></div>
+            </div>
+        </div>
+        <div class="report-card">
+            <div class="card-header">
+                <h3>🍩 Distribución General</h3>
+                <span class="card-label">110 alumnos total</span>
+            </div>
+            <div class="card-body">
+                <div class="donut-wrap">
+                    <svg width="120" height="120" viewBox="0 0 120 120">
+                        <circle cx="60" cy="60" r="46" fill="none" stroke="#dde4f0" stroke-width="16"/>
+                        <circle cx="60" cy="60" r="46" fill="none" stroke="#00c49a" stroke-width="16" stroke-dasharray="289" stroke-dashoffset="26" stroke-linecap="round" transform="rotate(-90 60 60)"/>
+                        <circle cx="60" cy="60" r="46" fill="none" stroke="#e8445a" stroke-width="16" stroke-dasharray="289" stroke-dashoffset="263" stroke-linecap="round" transform="rotate(-90 60 60)"/>
+                        <circle cx="60" cy="60" r="46" fill="none" stroke="#f5a623" stroke-width="16" stroke-dasharray="289" stroke-dashoffset="280" stroke-linecap="round" transform="rotate(-90 60 60)"/>
+                        <text x="60" y="55" text-anchor="middle" font-family="Space Grotesk" font-size="18" font-weight="700" fill="#0f2044">91%</text>
+                        <text x="60" y="70" text-anchor="middle" font-family="DM Sans" font-size="9" fill="#8a97b4">ASISTENCIA</text>
+                    </svg>
+                    <div class="donut-legend">
+                        <div class="legend-item"><div class="legend-dot green"></div><span class="legend-label">Presentes</span><span class="legend-value">91%</span></div>
+                        <div class="legend-item"><div class="legend-dot red"></div><span class="legend-label">Ausentes</span><span class="legend-value">6%</span></div>
+                        <div class="legend-item"><div class="legend-dot orange"></div><span class="legend-label">Justificados</span><span class="legend-value">3%</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gráficos fila 2 -->
+    <div class="three-col">
+        <div class="report-card">
+            <div class="card-header">
+                <h3>📈 Tendencia por Alumno</h3>
+                <span class="card-label">Últimas 6 clases</span>
+            </div>
+            <div class="card-body">
+                <div id="sparklines"></div>
+            </div>
+        </div>
+        <div class="report-card">
+            <div class="card-header">
+                <h3>🚨 Alertas</h3>
+                <span class="alert-count">3 activas</span>
+            </div>
+            <div class="card-body">
+                <div class="alert-list">
+                    <div class="alert-item danger">
+                        <div class="alert-icon">🔴</div>
+                        <div class="alert-text"><strong>Carlos Gómez – Matemáticas</strong><span>5 ausencias consecutivas · Riesgo alto</span></div>
+                    </div>
+                    <div class="alert-item danger">
+                        <div class="alert-icon">🔴</div>
+                        <div class="alert-text"><strong>Valeria Torres – Historia</strong><span>Asistencia del 58% · Bajo el mínimo</span></div>
+                    </div>
+                    <div class="alert-item warning">
+                        <div class="alert-icon">🟡</div>
+                        <div class="alert-text"><strong>Miguel Ríos – Inglés</strong><span>Asistencia del 70% · En observación</span></div>
+                    </div>
+                    <div class="alert-item info">
+                        <div class="alert-icon">🔵</div>
+                        <div class="alert-text"><strong>Inglés – Sin QR generado</strong><span>La clase del 15/02 no tiene registro</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ranking -->
+    <div class="report-card">
+        <div class="card-header">
+            <h3>🏆 Ranking de Asistencia – Alumnos</h3>
+            <span class="card-label">Mejor a peor · Todas las materias</span>
+        </div>
+        <div class="card-body">
+            <div id="rankingList"></div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'webapplication/js/reportes.js' %}"></script>
+{% endblock %}
