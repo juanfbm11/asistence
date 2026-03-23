@@ -34,26 +34,30 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for admin in personas %}
+                    {% for usuario in personas %}
                     <tr>
-                        <td class="td-id">#{{ admin.id }}</td>
+                        <td class="td-id">#{{ usuario.id }}</td>
                         <td>
                             <div class="td-avatar">
                                 <div class="avatar-circle">
-                                    {{ admin.nombre|first|upper }}{{ admin.apellido|first|upper }}
+                                    {{ usuario.nombre|first|upper }}{{ usuario.apellido|first|upper }}
                                 </div>
                                 <div>
-                                    <div class="td-name">{{ admin.nombre }} {{ admin.apellido }}</div>
+                                    <div class="td-name">{{ usuario.nombre }} {{ usuario.apellido }}</div>
                                 </div>
                             </div>
                         </td>
-                        <td class="td-email">{{ admin.usuario.email }}</td>
+                        <td class="td-email">{{ usuario.email }}</td>
                         <td><span class="td-badge">Administrador</span></td>
                         <td>
                             <div class="actions-cell">
                                 <button class="action-btn btn-edit"
-                                    onclick="abrirEditar('{{ admin.id }}','{{ admin.nombre }}','{{ admin.apellido }}','{{ admin.usuario.email }}')">
+                                    onclick="abrirEditar('{{ usuario.id }}','{{ usuario.nombre }}','{{ usuario.apellido }}','{{ usuario.email }}')">
                                     Editar
+                                </button>
+                                <button class="action-btn btn-delete"
+                                    onclick="confirmarEliminar('{{ usuario.nombre }} {{ usuario.apellido }}', '{% url "eliminar_admin" usuario.id %}')">
+                                    Eliminar
                                 </button>
 
 
@@ -111,6 +115,7 @@
         <div class="modal-footer">
             <button class="btn-cancel" onclick="cerrarModal()">Cancelar</button>
             <button class="btn-save" onclick="document.getElementById('modalForm').submit()">Guardar</button>
+
         </div>
     </div>
 </div>

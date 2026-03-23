@@ -49,6 +49,7 @@ class Profesor(models.Model):
 
     colegio = models.CharField(max_length=100)
     turno = models.CharField(max_length=20, choices=TURNO_CHOICES)
+    clases= models.CharField(max_length=100)
 
     def __str__(self):
         return f"{self.usuario.nombre} {self.usuario.apellido}"
