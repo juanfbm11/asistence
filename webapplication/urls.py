@@ -31,7 +31,13 @@ urlpatterns = [
 
     # ── Administrador ──
     path('admincrud/',    views.admincrud, name='admincrud'),
-    path('admincrud/admin/nuevo/',                 views.nuevo_admin,  name='nuevo_admin'),
-    path('admincrud/admin/<int:pk>/editar/',        views.editar_admin, name='editar_admin'),
-    path('admincrud/admin/<int:pk>/eliminar/',      views.eliminar_admin, name='eliminar_admin'),
+    path('admincrud/admin/nuevo/', views.nuevo_admin,  name='nuevo_admin'),
+    path('admincrud/admin/<int:pk>/editar/', views.editar_admin, name='editar_admin'),
+    path('admincrud/admin/<int:pk>/eliminar/', views.eliminar_admin, name='eliminar_admin'),
+    path('nuevo-profesor/', views.nuevo_profesor, name='nuevo_profesor'),
+    path('nuevo-estudiante/', views.nuevo_estudiante, name='nuevo_estudiante'),
+    path('profesor/<int:id>/editar/', views.editar_profesor, name='editar_profesor'),
+    path('estudiante/<int:id>/editar/', views.editar_estudiante, name='editar_estudiante'),
+    path('profesor/<int:id>/eliminar/', views.eliminar_profesor, name='eliminar_profesor'),
+    path('estudiante/<int:id>/eliminar/', views.eliminar_estudiante, name='eliminar_estudiante'),
 ]
