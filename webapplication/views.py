@@ -26,21 +26,21 @@ def login_view(request):
         password = request.POST['password']
         rol = request.POST['rol']
 
-        Usuario = authenticate(request, username=email, password=password)
+        usuario = authenticate(request, username=email, password=password)
 
-        if Usuario is None:
+        if usuario is None:
             messages.error(request, 'email o Contraseña Incorrectos')
             return render(request, 'webapplication/login.html')
 
-        if Usuario.rol != rol:
-            messages.warning(request, f'Este email corresponde al rol de {Usuario.rol}.')
+        if usuario.rol != rol:
+            messages.warning(request, f'Este email corresponde al rol de {usuario.rol}.')
             return render(request, 'webapplication/login.html')
 
-        login(request, Usuario)
+        login(request, usuario)
 
-        if Usuario.rol == 'administrador':
+        if usuario.rol == 'administrador':
             return redirect('admincrud')
-        elif Usuario.rol == 'profesor':
+        elif usuario.rol == 'profesor':
             return redirect('inicio')
         else:
             return redirect('alumno_inicio')
@@ -80,6 +80,10 @@ def nuevo_admin(request):
 
         if not email:
             messages.error(request, 'El email es obligatorio.')
+            return redirect('admincrud')
+
+        if not password:
+            messages.error(request, "La contraseña es obligatoria")
             return redirect('admincrud')
 
         if Usuario.objects.filter(email=email).exists():
@@ -125,10 +129,23 @@ def eliminar_admin(request, pk):
 
 def nuevo_estudiante(request):
     if request.method == 'POST':
+
+        email = request.POST.get('email')
+        password = request.POST.get('password')
+
+        if not password:
+            messages.error(request, "La contraseña es obligatoria")
+            return redirect('admincrud')
+
+
+        if Usuario.objects.filter(email=email).exists():
+            messages.error(request, "Ya existe un usuario con ese email")
+            return redirect('admincrud')
+
         # Crear usuario base
         usuario = Usuario.objects.create_user(
-            email=request.POST.get('email'),
-            password=request.POST.get('password'),
+            email=email,
+            password=password,
             nombre=request.POST.get('nombre'),
             apellido=request.POST.get('apellido'),
             rol='estudiante'
@@ -177,9 +194,16 @@ def eliminar_estudiante(request, id):
 
 def nuevo_profesor(request):
     if request.method == 'POST':
+
+        password = request.POST.get('password')
+
+        if not password:   # ← AQUÍ
+            messages.error(request, "La contraseña es obligatoria")
+            return redirect('admincrud')
+
         usuario = Usuario.objects.create_user(
             email=request.POST.get('email'),
-            password=request.POST.get('password'),
+            password=password,
             nombre=request.POST.get('nombre'),
             apellido=request.POST.get('apellido'),
             rol='profesor'
