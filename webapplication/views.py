@@ -7,10 +7,10 @@ from django.contrib.auth.decorators import login_required
 
 from personas.models import Usuario, Profesor, Estudiante
 
-# ── LOGIN ──────────────────────────────────────────────────────────────
-@login_required
+
+
 def admincrud(request):
-    admin= Usuario.objects.filter(rol='administrador')
+    admin = Usuario.objects.filter(rol='administrador')
     profesores = Usuario.objects.filter(rol='profesor')
     estudiantes = Usuario.objects.filter(rol='estudiante')
 
@@ -33,15 +33,15 @@ def login_view(request):
             return render(request, 'webapplication/login.html')
 
         if Usuario.rol != rol:
-            messages.warning(request, f'Este correo corresponde al rol de {Usuario.rol}.')
+            messages.warning(request, f'Este email corresponde al rol de {Usuario.rol}.')
             return render(request, 'webapplication/login.html')
 
         login(request, Usuario)
 
         if Usuario.rol == 'administrador':
-            return redirect('/admincrud/')
+            return redirect('admincrud')
         elif Usuario.rol == 'profesor':
-            return redirect('/inicio/')
+            return redirect('inicio')
         else:
             return redirect('alumno_inicio')
 
@@ -89,7 +89,7 @@ def nuevo_admin(request):
 
 
 
-        Usuario.objects.create(
+        Usuario.objects.create_user(
             email=email,
             password=password,
             rol='administrador',

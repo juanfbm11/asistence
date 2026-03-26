@@ -12,35 +12,35 @@
             <h1>Panel de Administración</h1>
             <p>Gestión de usuarios del sistema</p>
         </div>
-        <button class="nuevo-btn" id="btnNuevo" onclick="abrirModalNuevo()">Nuevo usuario</button>
+        <button class="nuevo-btn" onclick="abrirModalNuevo()">+ Nuevo usuario</button>
     </div>
 
     <!-- Pestañas -->
     <div class="tabs-bar">
-        <button class="tab-btn active" onclick="cambiarTab('admin', this)">
+        <button class="tab-btn active" onclick="cambiarTab('admins', this)">
             <span class="tab-icon">🛡️</span> Administradores
-            <span class="tab-count" id="countAdmin">{{ admins|length }}</span>
+            <span class="tab-count">{{ admin|length }}</span>
         </button>
         <button class="tab-btn" onclick="cambiarTab('profesores', this)">
             <span class="tab-icon">👨‍🏫</span> Profesores
-            <span class="tab-count" id="countProfesores">{{ profesores|length }}</span>
+            <span class="tab-count">{{ profesores|length }}</span>
         </button>
         <button class="tab-btn" onclick="cambiarTab('estudiantes', this)">
             <span class="tab-icon">🎓</span> Estudiantes
-            <span class="tab-count" id="countEstudiantes">{{ estudiantes|length }}</span>
+            <span class="tab-count">{{ estudiantes|length }}</span>
         </button>
     </div>
 
     <!-- ══ TAB: ADMINISTRADORES ══ -->
-    <div class="tab-panel" id="panel-admin">
+    <div class="tab-panel" id="panel-admins">
         <div class="main-card">
             <div class="main-card-header">
                 <h3>Lista de administradores</h3>
                 <div class="header-search">
                     <span>🔍</span>
-                    <input type="text" placeholder="Buscar..." oninput="filtrarTabla('tablaAdmin', this, 'contador-admin')">
+                    <input type="text" placeholder="Buscar..." oninput="filtrarTabla('tablaAdmins', this, 'contador-admins')">
                 </div>
-                <span class="results-count" id="contador-admin">{{ admin|length }} registros</span>
+                <span class="results-count" id="contador-admins">{{ admin|length }} registros</span>
             </div>
             <div style="overflow-x:auto">
                 <table id="tablaAdmins">
@@ -50,25 +50,25 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {% for usuario in admin %}
+                        {% for u in admin %}
                         <tr>
-                            <td class="td-id">#{{ usuario.id }}</td>
+                            <td class="td-id">#{{ u.id }}</td>
                             <td>
                                 <div class="td-avatar">
-                                    <div class="avatar-circle admin">{{ usuario.nombre|first|upper }}{{ usuario.apellido|first|upper }}</div>
-                                    <div class="td-name">{{ usuario.nombre }} {{ usuario.apellido }}</div>
+                                    <div class="avatar-circle admin">{{ u.nombre|first|upper }}{{ u.apellido|first|upper }}</div>
+                                    <div class="td-name">{{ u.nombre }} {{ u.apellido }}</div>
                                 </div>
                             </td>
-                            <td class="td-email">{{ usuario.email }}</td>
+                            <td class="td-email">{{ u.email }}</td>
                             <td><span class="td-badge admin">Administrador</span></td>
                             <td>
                                 <div class="actions-cell">
                                     <button class="action-btn btn-edit"
-                                        onclick="abrirEditar('admin','{{ usuario.id }}','{{ usuario.nombre }}','{{ usuario.apellido }}','{{ usuario.email }}','','')">
+                                        onclick="abrirEditarAdmin('{{ u.id }}','{{ u.nombre }}','{{ u.apellido }}','{{ u.email }}')">
                                         Editar
                                     </button>
                                     <button class="action-btn btn-delete"
-                                        onclick="confirmarEliminar('{{ usuario.nombre }} {{ usuario.apellido }}', '{% url 'eliminar_admin' usuario.id %}')">
+                                        onclick="confirmarEliminar('{{ u.nombre }} {{ u.apellido }}', '{% url 'eliminar_admin' u.id %}')">
                                         Eliminar
                                     </button>
                                 </div>
@@ -89,6 +89,7 @@
             <div class="main-card-header">
                 <h3>Lista de profesores</h3>
                 <div class="header-search">
+                    <span>🔍</span>
                     <input type="text" placeholder="Buscar..." oninput="filtrarTabla('tablaProfesores', this, 'contador-profesores')">
                 </div>
                 <span class="results-count" id="contador-profesores">{{ profesores|length }} registros</span>
@@ -97,47 +98,38 @@
                 <table id="tablaProfesores">
                     <thead>
                         <tr>
-                            <th>ID</th>
-                            <th>Nombre</th>
-                            <th>Email</th>
-                            <th>Clases</th>
-                            <th>Colegio</th>
-                            <th>Turno</th>
-                            <th>Acciones</th>
+                            <th>ID</th><th>Nombre</th><th>Email</th><th>Colegio</th><th>Turno</th><th>Clases</th><th>Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {% for profesor in profesores %}
+                        {% for u in profesores %}
                         <tr>
-                            <td class="td-id">#{{ profesor.id }}</td>
+                            <td class="td-id">#{{ u.id }}</td>
                             <td>
                                 <div class="td-avatar">
-                                    <div class="avatar-circle profesor">{{ profesor.nombre|first|upper }}{{ profesor.apellido|first|upper }}</div>
-                                    <div class="td-name">{{ profesor.nombre }} {{ profesor.apellido }}</div>
+                                    <div class="avatar-circle profesor">{{ u.nombre|first|upper }}{{ u.apellido|first|upper }}</div>
+                                    <div class="td-name">{{ u.nombre }} {{ u.apellido }}</div>
                                 </div>
                             </td>
-                            <td class="td-email">{{ profesor.email }}</td>
-                            <td><span class="td-materias">{{ profesor.materias|default:"—" }}</span></td>
-                            <td>
-                                <span class="td-badge {% if profesor.activo %}green{% else %}gray{% endif %}">
-                                    {% if profesor.activo %}Activo{% else %}Inactivo{% endif %}
-                                </span>
-                            </td>
+                            <td class="td-email">{{ u.email }}</td>
+                            <td class="td-extra">{{ u.profesor_perfil.colegio|default:"—" }}</td>
+                            <td><span class="td-badge turno">{{ u.profesor_perfil.turno|default:"—" }}</span></td>
+                            <td class="td-extra">{{ u.profesor_perfil.clases|default:"—" }}</td>
                             <td>
                                 <div class="actions-cell">
                                     <button class="action-btn btn-edit"
-                                        onclick="abrirEditar('profesor','{{ profesor.id }}','{{ profesor.nombre }}','{{ profesor.apellido }}','{{ profesor.email }}','{{ profesor.materias }}','')">
+                                        onclick="abrirEditarProfesor('{{ u.id }}','{{ u.nombre }}','{{ u.apellido }}','{{ u.email }}','{{ u.profesor_perfil.colegio }}','{{ u.profesor_perfil.turno }}','{{ u.profesor_perfil.clases }}')">
                                         Editar
                                     </button>
                                     <button class="action-btn btn-delete"
-                                        onclick="confirmarEliminar('{{ profesor.nombre }} {{ profesor.apellido }}', '{% url 'eliminar_profesor' profesor.id %}')">
+                                        onclick="confirmarEliminar('{{ u.nombre }} {{ u.apellido }}', '{% url 'eliminar_profesor' u.id %}')">
                                         Eliminar
                                     </button>
                                 </div>
                             </td>
                         </tr>
                         {% empty %}
-                        <tr><td colspan="6"><div class="empty-state"><p>No hay profesores registrados</p></div></td></tr>
+                        <tr><td colspan="7"><div class="empty-state"><p>No hay profesores registrados</p></div></td></tr>
                         {% endfor %}
                     </tbody>
                 </table>
@@ -160,34 +152,30 @@
                 <table id="tablaEstudiantes">
                     <thead>
                         <tr>
-                            <th>ID</th><th>Nombre</th><th>Email</th><th>Grado / Grupo</th><th>Estado</th><th>Acciones</th>
+                            <th>ID</th><th>Nombre</th><th>Email</th><th>Colegio</th><th>Clases</th><th>Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {% for estudiante in estudiantes %}
+                        {% for u in estudiantes %}
                         <tr>
-                            <td class="td-id">#{{ estudiante.id }}</td>
+                            <td class="td-id">#{{ u.id }}</td>
                             <td>
                                 <div class="td-avatar">
-                                    <div class="avatar-circle estudiante">{{ estudiante.nombre|first|upper }}{{ estudiante.apellido|first|upper }}</div>
-                                    <div class="td-name">{{ estudiante.nombre }} {{ estudiante.apellido }}</div>
+                                    <div class="avatar-circle estudiante">{{ u.nombre|first|upper }}{{ u.apellido|first|upper }}</div>
+                                    <div class="td-name">{{ u.nombre }} {{ u.apellido }}</div>
                                 </div>
                             </td>
-                            <td class="td-email">{{ estudiante.email }}</td>
-                            <td><span class="td-grado">{{ estudiante.grado|default:"—" }}</span></td>
-                            <td>
-                                <span class="td-badge {% if estudiante.activo %}green{% else %}gray{% endif %}">
-                                    {% if estudiante.activo %}Activo{% else %}Inactivo{% endif %}
-                                </span>
-                            </td>
+                            <td class="td-email">{{ u.email }}</td>
+                            <td class="td-extra">{{ u.estudiante.colegio|default:"—" }}</td>
+                            <td class="td-extra">{{ u.estudiante.clases|default:"—" }}</td>
                             <td>
                                 <div class="actions-cell">
                                     <button class="action-btn btn-edit"
-                                        onclick="abrirEditar('estudiante','{{ estudiante.id }}','{{ estudiante.nombre }}','{{ estudiante.apellido }}','{{ estudiante.email }}','','{{ estudiante.grado }}')">
+                                        onclick="abrirEditarEstudiante('{{ u.id }}','{{ u.nombre }}','{{ u.apellido }}','{{ u.email }}','{{ u.estudiante.colegio }}','{{ u.estudiante.clases }}')">
                                         Editar
                                     </button>
                                     <button class="action-btn btn-delete"
-                                        onclick="confirmarEliminar('{{ estudiante.nombre }} {{ estudiante.apellido }}', '{% url 'eliminar_estudiante' estudiante.id %}')">
+                                        onclick="confirmarEliminar('{{ u.nombre }} {{ u.apellido }}', '{% url 'eliminar_estudiante' u.id %}')">
                                         Eliminar
                                     </button>
                                 </div>
@@ -205,79 +193,165 @@
 </div>
 
 
-<!-- ══ MODAL NUEVO / EDITAR ══ -->
-<div class="modal-overlay" id="modalOverlay">
-    <div class="modal">
+<!-- ══ MODAL SELECTOR DE TIPO ══ -->
+<div class="modal-overlay" id="modalSelector">
+    <div class="modal" style="max-width:400px">
         <div class="modal-header">
-            <h3 id="modalTitulo">Nuevo Usuario</h3>
-            <button class="modal-close" onclick="cerrarModal()">✕</button>
+            <h3>¿Qué tipo de usuario?</h3>
+            <button class="modal-close" onclick="cerrar('modalSelector')">✕</button>
         </div>
         <div class="modal-body">
-            <form method="POST" id="modalForm" action="{% url 'nuevo_admin' %} {% url 'nuevo_estudiante' %} {% url 'nuevo_profesor' %}">
-                {% csrf_token %}
-
-                <!-- Selector de tipo (solo en modo nuevo) -->
-                <div id="tipoSelector" class="tipo-selector">
-                    <div class="tipo-label">Tipo de usuario</div>
-                    <div class="tipo-grid">
-                        <button type="button" class="tipo-btn admin selected" onclick="seleccionarTipo('admin', this)">
-                            <span>Administrador</span>
-                        </button>
-                        <button type="button" class="tipo-btn profesor" onclick="seleccionarTipo('profesor', this)">
-                            <span>Profesor</span>
-                        </button>
-                        <button type="button" class="tipo-btn estudiante" onclick="seleccionarTipo('estudiante', this)">
-                            <span>Estudiante</span>
-                        </button>
-                    </div>
-                </div>
-
-                <input type="hidden" name="tipo_usuario" id="inputTipo" value="admin">
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">Nombre</label>
-                        <input type="text" name="nombre" id="inputNombre" class="form-input" placeholder="Juan" required>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Apellido</label>
-                        <input type="text" name="apellido" id="inputApellido" class="form-input" placeholder="Pérez" required>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Email institucional</label>
-                    <input type="email" name="email" id="inputEmail" class="form-input" placeholder="usuario@colegio.edu.co" required>
-                </div>
-
-                <!-- Campo materias (solo profesores) -->
-                <div class="form-group" id="materiasGroup" style="display:none">
-                    <label class="form-label">Materias asignadas</label>
-                    <input type="text" name="materias" id="inputMaterias" class="form-input" placeholder="Historia, Matemáticas, Inglés">
-                    <span class="form-hint">Separa las materias con comas</span>
-                </div>
-
-                <!-- Campo grado (solo estudiantes) -->
-                <div class="form-group" id="gradoGroup" style="display:none">
-                    <label class="form-label">Grado / Grupo</label>
-                    <input type="text" name="grado" id="inputGrado" class="form-input" placeholder="10° A">
-                </div>
-
-                <!-- Contraseña (solo en nuevo) -->
-                <div class="form-group" id="passwordGroup">
-                    <label class="form-label">Contraseña</label>
-                    <input type="password" name="password" class="form-input" placeholder="••••••••">
-                </div>
-
-            </form>
-        </div>
-        <div class="modal-footer">
-            <button class="btn-cancel" onclick="cerrarModal()">Cancelar</button>
-            <button class="btn-save" id="btnGuardar" onclick="document.getElementById('modalForm').submit()">Guardar</button>
+            <div class="tipo-grid">
+                <button type="button" class="tipo-btn admin" onclick="abrirPorTipo('admin')">
+                    <span>🛡️</span><span>Administrador</span>
+                </button>
+                <button type="button" class="tipo-btn profesor" onclick="abrirPorTipo('profesor')">
+                    <span>👨‍🏫</span><span>Profesor</span>
+                </button>
+                <button type="button" class="tipo-btn estudiante" onclick="abrirPorTipo('estudiante')">
+                    <span>🎓</span><span>Estudiante</span>
+                </button>
+            </div>
         </div>
     </div>
 </div>
 
+<!-- ══ MODAL ADMIN ══ -->
+<div class="modal-overlay" id="modalAdmin">
+    <div class="modal">
+        <div class="modal-header">
+            <h3 id="tituloAdmin">Nuevo Administrador</h3>
+            <button class="modal-close" onclick="cerrar('modalAdmin')">✕</button>
+        </div>
+        <div class="modal-body">
+            <form method="POST" id="formAdmin" action="{% url 'nuevo_admin' %}">
+                {% csrf_token %}
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Nombre</label>
+                        <input type="text" name="nombre" id="aNombre" class="form-input" placeholder="Juan" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Apellido</label>
+                        <input type="text" name="apellido" id="aApellido" class="form-input" placeholder="Pérez" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Email institucional</label>
+                    <input type="email" name="email" id="aEmail" class="form-input" placeholder="admin@colegio.edu.co" required>
+                </div>
+                <div class="form-group" id="aPasswordGroup">
+                    <label class="form-label">Contraseña</label>
+                    <input type="password" name="password" class="form-input" placeholder="••••••••">
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-cancel" onclick="cerrar('modalAdmin')">Cancelar</button>
+            <button class="btn-save" onclick="document.getElementById('formAdmin').submit()">Guardar</button>
+        </div>
+    </div>
+</div>
+
+<!-- ══ MODAL PROFESOR ══ -->
+<div class="modal-overlay" id="modalProfesor">
+    <div class="modal">
+        <div class="modal-header">
+            <h3 id="tituloProfesor">Nuevo Profesor</h3>
+            <button class="modal-close" onclick="cerrar('modalProfesor')">✕</button>
+        </div>
+        <div class="modal-body">
+            <form method="POST" id="formProfesor" action="{% url 'nuevo_profesor' %}">
+                {% csrf_token %}
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Nombre</label>
+                        <input type="text" name="nombre" id="pNombre" class="form-input" placeholder="Juan" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Apellido</label>
+                        <input type="text" name="apellido" id="pApellido" class="form-input" placeholder="Pérez" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Email institucional</label>
+                    <input type="email" name="email" id="pEmail" class="form-input" placeholder="profesor@colegio.edu.co" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Colegio</label>
+                    <input type="text" name="colegio" id="pColegio" class="form-input" placeholder="Colegio San Martín">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Turno</label>
+                        <select name="turno" id="pTurno" class="form-input">
+                            <option value="mañana">Mañana</option>
+                            <option value="tarde">Tarde</option>
+                            <option value="noche">Noche</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Clases</label>
+                        <input type="text" name="clases" id="pClases" class="form-input" placeholder="Historia, Matemáticas">
+                    </div>
+                </div>
+                <div class="form-group" id="pPasswordGroup">
+                    <label class="form-label">Contraseña</label>
+                    <input type="password" name="password" class="form-input" placeholder="••••••••">
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-cancel" onclick="cerrar('modalProfesor')">Cancelar</button>
+            <button class="btn-save" onclick="document.getElementById('formProfesor').submit()">Guardar</button>
+        </div>
+    </div>
+</div>
+
+<!-- ══ MODAL ESTUDIANTE ══ -->
+<div class="modal-overlay" id="modalEstudiante">
+    <div class="modal">
+        <div class="modal-header">
+            <h3 id="tituloEstudiante">Nuevo Estudiante</h3>
+            <button class="modal-close" onclick="cerrar('modalEstudiante')">✕</button>
+        </div>
+        <div class="modal-body">
+            <form method="POST" id="formEstudiante" action="{% url 'nuevo_estudiante' %}">
+                {% csrf_token %}
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Nombre</label>
+                        <input type="text" name="nombre" id="eNombre" class="form-input" placeholder="Juan" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Apellido</label>
+                        <input type="text" name="apellido" id="eApellido" class="form-input" placeholder="Pérez" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Email institucional</label>
+                    <input type="email" name="email" id="eEmail" class="form-input" placeholder="estudiante@colegio.edu.co" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Colegio</label>
+                    <input type="text" name="colegio" id="eColegio" class="form-input" placeholder="Colegio San Martín">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Clases / Grado</label>
+                    <input type="text" name="clases" id="eClases" class="form-input" placeholder="10° A">
+                </div>
+                <div class="form-group" id="ePasswordGroup">
+                    <label class="form-label">Contraseña</label>
+                    <input type="password" name="password" class="form-input" placeholder="••••••••">
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-cancel" onclick="cerrar('modalEstudiante')">Cancelar</button>
+            <button class="btn-save" onclick="document.getElementById('formEstudiante').submit()">Guardar</button>
+        </div>
+    </div>
+</div>
 
 <!-- ══ MODAL CONFIRMAR ELIMINAR ══ -->
 <div class="modal-overlay" id="confirmOverlay">
@@ -290,7 +364,7 @@
             <p style="font-size:12px;color:var(--text-soft)">Esta acción no se puede deshacer.</p>
         </div>
         <div class="modal-footer" style="justify-content:center">
-            <button class="btn-cancel" onclick="cerrarConfirm()">Cancelar</button>
+            <button class="btn-cancel" onclick="cerrar('confirmOverlay')">Cancelar</button>
             <form method="POST" id="confirmForm">
                 {% csrf_token %}
                 <button type="submit" class="btn-danger">Sí, eliminar</button>
@@ -304,322 +378,202 @@
 
 {% block extra_css %}
 <style>
-/* ── PAGE HEADER ── */
 .page-header {
-    display: flex; align-items: flex-start; justify-content: space-between;
-    margin-bottom: 24px; flex-wrap: wrap; gap: 16px;
+    display:flex; align-items:flex-start; justify-content:space-between;
+    margin-bottom:24px; flex-wrap:wrap; gap:16px;
 }
-.page-header h1 {
-    font-family: 'Space Grotesk', sans-serif;
-    font-size: 24px; font-weight: 700; color: var(--navy);
-}
-.page-header p { font-size: 13px; color: var(--text-soft); margin-top: 4px; }
-
+.page-header h1 { font-family:'Space Grotesk',sans-serif; font-size:24px; font-weight:700; color:var(--navy); }
+.page-header p  { font-size:13px; color:var(--text-soft); margin-top:4px; }
 .nuevo-btn {
-    display: inline-flex; align-items: center; gap: 8px;
-    padding: 10px 20px; border-radius: 10px; border: none;
-    background: linear-gradient(135deg, var(--blue-light), var(--blue));
-    color: white; font-family: 'DM Sans', sans-serif;
-    font-size: 13px; font-weight: 700; cursor: pointer;
-    box-shadow: 0 4px 14px rgba(59,116,245,0.3); transition: all 0.2s;
+    display:inline-flex; align-items:center; gap:8px; padding:10px 20px;
+    border-radius:10px; border:none;
+    background:linear-gradient(135deg,var(--blue-light),var(--blue));
+    color:white; font-family:'DM Sans',sans-serif; font-size:13px; font-weight:700;
+    cursor:pointer; box-shadow:0 4px 14px rgba(59,116,245,0.3); transition:all 0.2s;
 }
-.nuevo-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(59,116,245,0.4); }
+.nuevo-btn:hover { transform:translateY(-2px); box-shadow:0 6px 20px rgba(59,116,245,0.4); }
 
-/* ── TABS ── */
+/* TABS */
 .tabs-bar {
-    display: flex; gap: 4px;
-    background: var(--surface); border-radius: 14px;
-    padding: 5px; margin-bottom: 20px;
-    border: 1px solid var(--border);
-    flex-wrap: wrap;
+    display:flex; gap:4px; background:var(--surface); border-radius:14px;
+    padding:5px; margin-bottom:20px; border:1px solid var(--border); flex-wrap:wrap;
 }
 .tab-btn {
-    display: inline-flex; align-items: center; gap: 8px;
-    padding: 10px 20px; border-radius: 10px; border: none;
-    font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 600;
-    color: var(--text-soft); background: transparent;
-    cursor: pointer; transition: all 0.2s; flex: 1; justify-content: center;
+    display:inline-flex; align-items:center; gap:8px; padding:10px 20px;
+    border-radius:10px; border:none; font-family:'DM Sans',sans-serif;
+    font-size:13px; font-weight:600; color:var(--text-soft); background:transparent;
+    cursor:pointer; transition:all 0.2s; flex:1; justify-content:center;
 }
-.tab-btn:hover { color: var(--navy); background: rgba(59,116,245,0.06); }
-.tab-btn.active {
-    background: white; color: var(--navy);
-    box-shadow: 0 2px 8px rgba(15,32,68,0.1);
-}
-.tab-icon { font-size: 16px; }
+.tab-btn:hover  { color:var(--navy); background:rgba(59,116,245,0.06); }
+.tab-btn.active { background:white; color:var(--navy); box-shadow:0 2px 8px rgba(15,32,68,0.1); }
+.tab-icon { font-size:16px; }
 .tab-count {
-    display: inline-flex; align-items: center; justify-content: center;
-    min-width: 22px; height: 22px; padding: 0 6px;
-    border-radius: 20px; background: var(--surface);
-    font-size: 11px; font-weight: 700; color: var(--text-soft);
+    display:inline-flex; align-items:center; justify-content:center;
+    min-width:22px; height:22px; padding:0 6px; border-radius:20px;
+    background:var(--surface); font-size:11px; font-weight:700; color:var(--text-soft);
 }
-.tab-btn.active .tab-count { background: rgba(59,116,245,0.1); color: var(--blue-light); }
+.tab-btn.active .tab-count { background:rgba(59,116,245,0.1); color:var(--blue-light); }
 
-/* ── CARD & TABLE ── */
-.main-card {
-    background: var(--card-bg); border-radius: 18px;
-    border: 1px solid var(--border); box-shadow: var(--shadow-md); overflow: hidden;
-}
+/* CARD */
+.main-card { background:var(--card-bg); border-radius:18px; border:1px solid var(--border); box-shadow:var(--shadow-md); overflow:hidden; }
 .main-card-header {
-    display: flex; align-items: center; gap: 12px;
-    padding: 16px 24px; border-bottom: 1px solid var(--border);
-    background: #f8faff; flex-wrap: wrap;
+    display:flex; align-items:center; gap:12px; padding:16px 24px;
+    border-bottom:1px solid var(--border); background:#f8faff; flex-wrap:wrap;
 }
-.main-card-header h3 {
-    font-family: 'Space Grotesk', sans-serif;
-    font-size: 15px; font-weight: 700; color: var(--navy); flex: 1;
-}
-.header-search {
-    display: flex; align-items: center; gap: 8px;
-    background: white; border: 1.5px solid var(--border);
-    border-radius: 8px; padding: 7px 12px;
-}
-.header-search input {
-    border: none; outline: none; font-family: 'DM Sans', sans-serif;
-    font-size: 13px; color: var(--text); background: transparent; width: 160px;
-}
-.results-count { font-size: 12px; color: var(--text-soft); white-space: nowrap; }
+.main-card-header h3 { font-family:'Space Grotesk',sans-serif; font-size:15px; font-weight:700; color:var(--navy); flex:1; }
+.header-search { display:flex; align-items:center; gap:8px; background:white; border:1.5px solid var(--border); border-radius:8px; padding:7px 12px; }
+.header-search input { border:none; outline:none; font-family:'DM Sans',sans-serif; font-size:13px; color:var(--text); background:transparent; width:160px; }
+.results-count { font-size:12px; color:var(--text-soft); white-space:nowrap; }
 
-table { width: 100%; border-collapse: collapse; }
-thead th {
-    background: #f8faff; padding: 11px 20px;
-    font-size: 11px; font-weight: 700; text-transform: uppercase;
-    letter-spacing: 0.07em; color: var(--text-soft);
-    border-bottom: 1px solid var(--border); text-align: left;
-}
-tbody tr { border-bottom: 1px solid #f0f4fb; transition: background 0.15s; }
-tbody tr:last-child { border-bottom: none; }
-tbody tr:hover { background: #f8faff; }
-tbody td { padding: 14px 20px; font-size: 13px; color: var(--text-mid); vertical-align: middle; }
+table { width:100%; border-collapse:collapse; }
+thead th { background:#f8faff; padding:11px 20px; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.07em; color:var(--text-soft); border-bottom:1px solid var(--border); text-align:left; }
+tbody tr { border-bottom:1px solid #f0f4fb; transition:background 0.15s; }
+tbody tr:last-child { border-bottom:none; }
+tbody tr:hover { background:#f8faff; }
+tbody td { padding:14px 20px; font-size:13px; color:var(--text-mid); vertical-align:middle; }
 
-.td-id { font-family: 'Space Grotesk', sans-serif; font-size: 12px; font-weight: 700; color: var(--text-soft); }
-.td-avatar { display: flex; align-items: center; gap: 10px; }
-.avatar-circle {
-    width: 36px; height: 36px; border-radius: 10px;
-    display: flex; align-items: center; justify-content: center;
-    font-family: 'Space Grotesk', sans-serif;
-    font-size: 12px; font-weight: 700; color: white; flex-shrink: 0;
-}
-.avatar-circle.admin     { background: linear-gradient(135deg, #f06070, var(--red)); }
-.avatar-circle.profesor  { background: linear-gradient(135deg, #5b8fff, var(--blue)); }
-.avatar-circle.estudiante{ background: linear-gradient(135deg, #00d4a0, #009c7a); }
+.td-id    { font-family:'Space Grotesk',sans-serif; font-size:12px; font-weight:700; color:var(--text-soft); }
+.td-avatar { display:flex; align-items:center; gap:10px; }
+.td-name  { font-weight:600; color:var(--navy); }
+.td-email { font-size:12px; color:var(--text-soft); }
+.td-extra { font-size:12px; color:var(--text-mid); }
 
-.td-name  { font-weight: 600; color: var(--navy); }
-.td-email { font-size: 12px; color: var(--text-soft); }
-.td-materias, .td-grado { font-size: 12px; color: var(--text-mid); }
+.avatar-circle { width:36px; height:36px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-family:'Space Grotesk',sans-serif; font-size:12px; font-weight:700; color:white; flex-shrink:0; }
+.avatar-circle.admin      { background:linear-gradient(135deg,#f06070,var(--red)); }
+.avatar-circle.profesor   { background:linear-gradient(135deg,#5b8fff,var(--blue)); }
+.avatar-circle.estudiante { background:linear-gradient(135deg,#00d4a0,#009c7a); }
 
-.td-badge {
-    display: inline-flex; align-items: center;
-    padding: 4px 10px; border-radius: 20px;
-    font-size: 11px; font-weight: 700;
-}
-.td-badge.admin    { background: rgba(232,68,90,0.1);  color: var(--red); }
-.td-badge.profesor { background: rgba(59,116,245,0.1); color: var(--blue-light); }
-.td-badge.estudiante{ background: rgba(0,196,154,0.1); color: var(--green); }
-.td-badge.green    { background: rgba(0,196,154,0.1);  color: var(--green); }
-.td-badge.gray     { background: rgba(138,151,180,0.1);color: var(--text-soft); }
+.td-badge { display:inline-flex; align-items:center; padding:4px 10px; border-radius:20px; font-size:11px; font-weight:700; }
+.td-badge.admin { background:rgba(232,68,90,0.1); color:var(--red); }
+.td-badge.turno { background:rgba(59,116,245,0.1); color:var(--blue-light); }
 
-.actions-cell { display: flex; gap: 6px; }
-.action-btn {
-    display: inline-flex; align-items: center; gap: 5px;
-    padding: 6px 12px; border-radius: 8px; border: none;
-    font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 600;
-    cursor: pointer; transition: all 0.2s;
-}
-.btn-edit   { background: rgba(59,116,245,0.08); color: var(--blue-light); }
-.btn-edit:hover { background: rgba(59,116,245,0.16); }
-.btn-delete { background: rgba(232,68,90,0.08); color: var(--red); }
-.btn-delete:hover { background: rgba(232,68,90,0.16); }
+.actions-cell { display:flex; gap:6px; }
+.action-btn { display:inline-flex; align-items:center; gap:5px; padding:6px 12px; border-radius:8px; border:none; font-family:'DM Sans',sans-serif; font-size:12px; font-weight:600; cursor:pointer; transition:all 0.2s; }
+.btn-edit   { background:rgba(59,116,245,0.08); color:var(--blue-light); }
+.btn-edit:hover { background:rgba(59,116,245,0.16); }
+.btn-delete { background:rgba(232,68,90,0.08); color:var(--red); }
+.btn-delete:hover { background:rgba(232,68,90,0.16); }
+.empty-state { text-align:center; padding:48px 20px; color:var(--text-soft); }
 
-.empty-state { text-align: center; padding: 48px 20px; color: var(--text-soft); }
+/* TIPO SELECTOR */
+.tipo-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+.tipo-btn { display:flex; flex-direction:column; align-items:center; gap:8px; padding:16px 8px; border-radius:14px; border:2px solid var(--border); background:var(--surface); font-family:'DM Sans',sans-serif; font-size:13px; font-weight:600; color:var(--text-mid); cursor:pointer; transition:all 0.2s; }
+.tipo-btn span:first-child { font-size:28px; }
+.tipo-btn.admin:hover      { border-color:var(--red); background:rgba(232,68,90,0.06); color:var(--red); }
+.tipo-btn.profesor:hover   { border-color:var(--blue-light); background:rgba(59,116,245,0.06); color:var(--blue-light); }
+.tipo-btn.estudiante:hover { border-color:var(--green); background:rgba(0,196,154,0.06); color:#009c7a; }
 
-/* ── MODAL ── */
-.modal-overlay {
-    position: fixed; inset: 0;
-    background: rgba(15,32,68,0.5); backdrop-filter: blur(4px);
-    z-index: 500; display: none;
-    align-items: center; justify-content: center; padding: 20px;
-}
-.modal-overlay.open { display: flex; }
-.modal {
-    background: var(--card-bg); border-radius: 20px;
-    box-shadow: var(--shadow-lg); width: 100%; max-width: 500px;
-    animation: fadeUp 0.3s ease both;
-}
-@keyframes fadeUp {
-    from { opacity: 0; transform: translateY(16px); }
-    to   { opacity: 1; transform: translateY(0); }
-}
-.modal-header {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 20px 24px; border-bottom: 1px solid var(--border);
-}
-.modal-header h3 { font-family: 'Space Grotesk', sans-serif; font-size: 16px; font-weight: 700; color: var(--navy); }
-.modal-close {
-    width: 32px; height: 32px; border-radius: 8px; border: none;
-    background: var(--surface); color: var(--text-soft);
-    font-size: 16px; cursor: pointer; transition: background 0.2s;
-    display: flex; align-items: center; justify-content: center;
-}
-.modal-close:hover { background: var(--border); }
-.modal-body { padding: 24px; }
-
-/* Selector de tipo */
-.tipo-selector { margin-bottom: 20px; }
-.tipo-label { font-size: 12px; font-weight: 600; color: var(--text-mid); margin-bottom: 10px; }
-.tipo-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; }
-.tipo-btn {
-    display: flex; flex-direction: column; align-items: center; gap: 6px;
-    padding: 12px 8px; border-radius: 12px;
-    border: 2px solid var(--border); background: var(--surface);
-    font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 600;
-    color: var(--text-mid); cursor: pointer; transition: all 0.2s;
-}
-.tipo-btn span:first-child { font-size: 20px; }
-.tipo-btn:hover { border-color: var(--blue-light); }
-.tipo-btn.selected.admin     { border-color: var(--red);   background: rgba(232,68,90,0.06); color: var(--red); }
-.tipo-btn.selected.profesor  { border-color: var(--blue-light); background: rgba(59,116,245,0.06); color: var(--blue-light); }
-.tipo-btn.selected.estudiante{ border-color: var(--green); background: rgba(0,196,154,0.06); color: #009c7a; }
-
-.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.form-group { margin-bottom: 16px; }
-.form-label { display: block; font-size: 12px; font-weight: 600; color: var(--text-mid); margin-bottom: 6px; }
-.form-hint  { font-size: 11px; color: var(--text-soft); margin-top: 4px; display: block; }
-.form-input {
-    width: 100%; padding: 11px 14px;
-    border: 1.5px solid var(--border); border-radius: 10px;
-    font-family: 'DM Sans', sans-serif; font-size: 14px;
-    color: var(--text); background: var(--surface); outline: none;
-    transition: border-color 0.2s, box-shadow 0.2s;
-}
-.form-input:focus { border-color: var(--blue-light); background: white; box-shadow: 0 0 0 3px rgba(59,116,245,0.1); }
-
-.modal-footer {
-    display: flex; gap: 10px; justify-content: flex-end;
-    padding: 16px 24px; border-top: 1px solid var(--border);
-}
-.btn-cancel {
-    padding: 10px 20px; border-radius: 10px;
-    border: 1.5px solid var(--border); background: transparent;
-    font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 600;
-    color: var(--text-mid); cursor: pointer; transition: all 0.2s;
-}
-.btn-cancel:hover { background: var(--surface); }
-.btn-save {
-    padding: 10px 24px; border-radius: 10px; border: none;
-    background: linear-gradient(135deg, var(--blue-light), var(--blue));
-    color: white; font-family: 'DM Sans', sans-serif;
-    font-size: 13px; font-weight: 700; cursor: pointer;
-    box-shadow: 0 4px 14px rgba(59,116,245,0.3); transition: all 0.2s;
-}
-.btn-save:hover { transform: translateY(-1px); }
-.btn-danger {
-    padding: 10px 24px; border-radius: 10px; border: none;
-    background: linear-gradient(135deg, #f06070, var(--red));
-    color: white; font-family: 'DM Sans', sans-serif;
-    font-size: 13px; font-weight: 700; cursor: pointer;
-    box-shadow: 0 4px 14px rgba(232,68,90,0.3); transition: all 0.2s;
-}
-.btn-danger:hover { transform: translateY(-1px); }
+/* MODALES */
+.modal-overlay { position:fixed; inset:0; background:rgba(15,32,68,0.5); backdrop-filter:blur(4px); z-index:500; display:none; align-items:center; justify-content:center; padding:20px; }
+.modal-overlay.open { display:flex; }
+.modal { background:var(--card-bg); border-radius:20px; box-shadow:var(--shadow-lg); width:100%; max-width:500px; animation:fadeUp 0.3s ease both; max-height:90vh; overflow-y:auto; }
+@keyframes fadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+.modal-header { display:flex; align-items:center; justify-content:space-between; padding:20px 24px; border-bottom:1px solid var(--border); }
+.modal-header h3 { font-family:'Space Grotesk',sans-serif; font-size:16px; font-weight:700; color:var(--navy); }
+.modal-close { width:32px; height:32px; border-radius:8px; border:none; background:var(--surface); color:var(--text-soft); font-size:16px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background 0.2s; }
+.modal-close:hover { background:var(--border); }
+.modal-body { padding:24px; }
+.form-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.form-group { margin-bottom:16px; }
+.form-label { display:block; font-size:12px; font-weight:600; color:var(--text-mid); margin-bottom:6px; }
+.form-input { width:100%; padding:11px 14px; border:1.5px solid var(--border); border-radius:10px; font-family:'DM Sans',sans-serif; font-size:14px; color:var(--text); background:var(--surface); outline:none; transition:border-color 0.2s,box-shadow 0.2s; }
+.form-input:focus { border-color:var(--blue-light); background:white; box-shadow:0 0 0 3px rgba(59,116,245,0.1); }
+.modal-footer { display:flex; gap:10px; justify-content:flex-end; padding:16px 24px; border-top:1px solid var(--border); }
+.btn-cancel { padding:10px 20px; border-radius:10px; border:1.5px solid var(--border); background:transparent; font-family:'DM Sans',sans-serif; font-size:13px; font-weight:600; color:var(--text-mid); cursor:pointer; transition:all 0.2s; }
+.btn-cancel:hover { background:var(--surface); }
+.btn-save { padding:10px 24px; border-radius:10px; border:none; background:linear-gradient(135deg,var(--blue-light),var(--blue)); color:white; font-family:'DM Sans',sans-serif; font-size:13px; font-weight:700; cursor:pointer; box-shadow:0 4px 14px rgba(59,116,245,0.3); transition:all 0.2s; }
+.btn-save:hover { transform:translateY(-1px); }
+.btn-danger { padding:10px 24px; border-radius:10px; border:none; background:linear-gradient(135deg,#f06070,var(--red)); color:white; font-family:'DM Sans',sans-serif; font-size:13px; font-weight:700; cursor:pointer; box-shadow:0 4px 14px rgba(232,68,90,0.3); transition:all 0.2s; }
+.btn-danger:hover { transform:translateY(-1px); }
 </style>
 {% endblock %}
 
 
 {% block extra_js %}
 <script>
-// ── URLS por tipo (ajusta según tus URL de Django) ──
-
-const URLS = {
-    admin:      { nuevo: "{% url 'nuevo_admin' %}",      editar: id => `/admincrud/admin/${id}/editar/` },
-    profesor:   { nuevo: "{% url 'nuevo_profesor' %}",   editar: id => `/admincrud/profesor/${id}/editar/` },
-    estudiante: { nuevo: "{% url 'nuevo_estudiante' %}", editar: id => `/admincrud/estudiante/${id}/editar/` },
-};
-
-let tabActual = 'admins';
-let tipoActual = 'admin';
-
-// ── CAMBIAR PESTAÑA ──
+// ── PESTAÑAS ──
 function cambiarTab(tab, btn) {
-    tabActual = tab;
     document.querySelectorAll('.tab-panel').forEach(p => p.style.display = 'none');
     document.getElementById('panel-' + tab).style.display = 'block';
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
-
-    // Actualizar tipo por defecto según la pestaña
-    const mapa = { admins: 'admin', profesores: 'profesor', estudiantes: 'estudiante' };
-    tipoActual = mapa[tab];
 }
 
-// ── ABRIR MODAL NUEVO ──
+// ── ABRIR SELECTOR ──
 function abrirModalNuevo() {
-    document.getElementById('modalTitulo').textContent = 'Nuevo Usuario';
-    document.getElementById('tipoSelector').style.display = 'block';
-    document.getElementById('inputNombre').value   = '';
-    document.getElementById('inputApellido').value = '';
-    document.getElementById('inputEmail').value    = '';
-    document.getElementById('inputMaterias').value = '';
-    document.getElementById('inputGrado').value    = '';
-    document.getElementById('passwordGroup').style.display = 'block';
-
-    // Pre-seleccionar tipo según tab activa
-    const mapa = { admins: 'admin', profesores: 'profesor', estudiantes: 'estudiante' };
-    const tipo = mapa[tabActual] || 'admin';
-    seleccionarTipo(tipo, document.querySelector('.tipo-btn.' + tipo));
-
-    document.getElementById('modalOverlay').classList.add('open');
+    document.getElementById('modalSelector').classList.add('open');
 }
 
-// ── SELECCIONAR TIPO EN MODAL ──
-function seleccionarTipo(tipo, btn) {
-    tipoActual = tipo;
-    document.getElementById('inputTipo').value = tipo;
-    document.querySelectorAll('.tipo-btn').forEach(b => b.classList.remove('selected'));
-    if (btn) btn.classList.add('selected');
-
-    // Mostrar/ocultar campos extra
-    document.getElementById('materiasGroup').style.display  = tipo === 'profesor'   ? 'block' : 'none';
-    document.getElementById('gradoGroup').style.display     = tipo === 'estudiante' ? 'block' : 'none';
-
-    // Actualizar acción del form
-    document.getElementById('modalForm').action = URLS[tipo].nuevo;
+function abrirPorTipo(tipo) {
+    cerrar('modalSelector');
+    if (tipo === 'admin') {
+        document.getElementById('tituloAdmin').textContent = 'Nuevo Administrador';
+        document.getElementById('formAdmin').action = "{% url 'nuevo_admin' %}";
+        limpiar(['aNombre','aApellido','aEmail']);
+        document.getElementById('aPasswordGroup').style.display = 'block';
+        document.getElementById('modalAdmin').classList.add('open');
+    } else if (tipo === 'profesor') {
+        document.getElementById('tituloProfesor').textContent = 'Nuevo Profesor';
+        document.getElementById('formProfesor').action = "{% url 'nuevo_profesor' %}";
+        limpiar(['pNombre','pApellido','pEmail','pColegio','pClases']);
+        document.getElementById('pPasswordGroup').style.display = 'block';
+        document.getElementById('modalProfesor').classList.add('open');
+    } else {
+        document.getElementById('tituloEstudiante').textContent = 'Nuevo Estudiante';
+        document.getElementById('formEstudiante').action = "{% url 'nuevo_estudiante' %}";
+        limpiar(['eNombre','eApellido','eEmail','eColegio','eClases']);
+        document.getElementById('ePasswordGroup').style.display = 'block';
+        document.getElementById('modalEstudiante').classList.add('open');
+    }
 }
 
-// ── ABRIR MODAL EDITAR ──
-function abrirEditar(tipo, id, nombre, apellido, email, extra1, extra2) {
-    tipoActual = tipo;
-    document.getElementById('modalTitulo').textContent = 'Editar ' + {admin:'Administrador', profesor:'Profesor', estudiante:'Estudiante'}[tipo];
-    document.getElementById('tipoSelector').style.display = 'none';
-    document.getElementById('inputTipo').value    = tipo;
-    document.getElementById('inputNombre').value  = nombre;
-    document.getElementById('inputApellido').value= apellido;
-    document.getElementById('inputEmail').value   = email;
-    document.getElementById('passwordGroup').style.display = 'none';
-
-    document.getElementById('materiasGroup').style.display  = tipo === 'profesor'   ? 'block' : 'none';
-    document.getElementById('gradoGroup').style.display     = tipo === 'estudiante' ? 'block' : 'none';
-
-    if (tipo === 'profesor')   document.getElementById('inputMaterias').value = extra1;
-    if (tipo === 'estudiante') document.getElementById('inputGrado').value    = extra2;
-
-    document.getElementById('modalForm').action = URLS[tipo].editar(id);
-    document.getElementById('modalOverlay').classList.add('open');
+// ── EDITAR ──
+function abrirEditarAdmin(id, nombre, apellido, email) {
+    document.getElementById('tituloAdmin').textContent = 'Editar Administrador';
+    document.getElementById('formAdmin').action = `/admincrud/admin/${id}/editar/`;
+    document.getElementById('aNombre').value   = nombre;
+    document.getElementById('aApellido').value = apellido;
+    document.getElementById('aEmail').value    = email;
+    document.getElementById('aPasswordGroup').style.display = 'none';
+    document.getElementById('modalAdmin').classList.add('open');
 }
 
-function cerrarModal() {
-    document.getElementById('modalOverlay').classList.remove('open');
+function abrirEditarProfesor(id, nombre, apellido, email, colegio, turno, clases) {
+    document.getElementById('tituloProfesor').textContent = 'Editar Profesor';
+    document.getElementById('formProfesor').action = `/profesor/${id}/editar/`;
+    document.getElementById('pNombre').value   = nombre;
+    document.getElementById('pApellido').value = apellido;
+    document.getElementById('pEmail').value    = email;
+    document.getElementById('pColegio').value  = colegio;
+    document.getElementById('pTurno').value    = turno;
+    document.getElementById('pClases').value   = clases;
+    document.getElementById('pPasswordGroup').style.display = 'none';
+    document.getElementById('modalProfesor').classList.add('open');
 }
 
-// ── CONFIRMAR ELIMINAR ──
+function abrirEditarEstudiante(id, nombre, apellido, email, colegio, clases) {
+    document.getElementById('tituloEstudiante').textContent = 'Editar Estudiante';
+    document.getElementById('formEstudiante').action = `/estudiante/${id}/editar/`;
+    document.getElementById('eNombre').value   = nombre;
+    document.getElementById('eApellido').value = apellido;
+    document.getElementById('eEmail').value    = email;
+    document.getElementById('eColegio').value  = colegio;
+    document.getElementById('eClases').value   = clases;
+    document.getElementById('ePasswordGroup').style.display = 'none';
+    document.getElementById('modalEstudiante').classList.add('open');
+}
+
+// ── ELIMINAR ──
 function confirmarEliminar(nombre, url) {
     document.getElementById('confirmNombre').textContent = nombre;
     document.getElementById('confirmForm').action = url;
     document.getElementById('confirmOverlay').classList.add('open');
 }
-function cerrarConfirm() {
-    document.getElementById('confirmOverlay').classList.remove('open');
-}
 
-// ── FILTRAR TABLAS ──
+// ── HELPERS ──
+function cerrar(id) { document.getElementById(id).classList.remove('open'); }
+function limpiar(ids) { ids.forEach(id => { document.getElementById(id).value = ''; }); }
+
 function filtrarTabla(tablaId, input, contadorId) {
     const q = input.value.toLowerCase();
     const filas = document.querySelectorAll('#' + tablaId + ' tbody tr');
@@ -632,12 +586,11 @@ function filtrarTabla(tablaId, input, contadorId) {
     document.getElementById(contadorId).textContent = visible + ' registros';
 }
 
-// ── CERRAR AL CLIC FUERA ──
-document.getElementById('modalOverlay').addEventListener('click', function(e) {
-    if (e.target === this) cerrarModal();
-});
-document.getElementById('confirmOverlay').addEventListener('click', function(e) {
-    if (e.target === this) cerrarConfirm();
+// Cerrar al clic fuera
+['modalAdmin','modalProfesor','modalEstudiante','modalSelector','confirmOverlay'].forEach(id => {
+    document.getElementById(id).addEventListener('click', function(e) {
+        if (e.target === this) cerrar(id);
+    });
 });
 </script>
 {% endblock %}
