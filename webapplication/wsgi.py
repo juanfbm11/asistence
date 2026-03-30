@@ -1,4 +1,4 @@
-x"""
+"""
 WSGI config for webapplication project.
 
 It exposes the WSGI callable as a module-level variable named ``application``.

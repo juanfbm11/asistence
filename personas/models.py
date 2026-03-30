@@ -17,12 +17,12 @@ class UsuarioManager(BaseUserManager):
     def create_superuser(self, email, password=None, **extra_fields):
         extra_fields.setdefault("is_staff", True)
         extra_fields.setdefault("is_superuser", True)
-
+        extra_fields.setdefault("rol", "administrador")
         return self.create_user(email, password, **extra_fields)
 
 class Usuario(AbstractUser):
     ROLE_CHOICES = [
-        ('administrador', 'Administrador'),
+        ('administrador', 'administrador'),
         ('profesor', 'Profesor'),
         ('estudiante', 'Estudiante'),
     ]

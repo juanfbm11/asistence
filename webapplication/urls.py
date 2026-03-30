@@ -22,7 +22,7 @@ urlpatterns = [
     path('',        views.login_view,  name='login'),    # / → login
     path('logout/', views.logout_view, name='logout'),
 
-    # ── Profesor / Alumno ──
+    # ── Profesor
     path('inicio/',   views.inicio,    name='inicio'),
     path('clases/',   views.clases,    name='clases'),
     path('lista/',    views.lista,     name='lista'),

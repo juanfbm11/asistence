@@ -53,9 +53,12 @@
     <nav class="header-nav">
         <a href="{% url 'inicio' %}"    class="nav-tab {% block nav_inicio %}{% endblock %}"> Inicio</a>
         <a href="{% url 'clases' %}"    class="nav-tab {% block nav_clases %}{% endblock %}">Mis Clases <span class="nav-tab-badge">4</span></a>
-        <a href="{% url 'lista' %}"     class="nav-tab {% block nav_lista %}{% endblock %}">Alumnos</a>
+        <a href="{% url 'lista' %}"     class="nav-tab {% block nav_lista %}{% endblock %}">LIstado</a>
         <a href="{% url 'codeqr' %}"    class="nav-tab {% block nav_codeqr %}{% endblock %}"> Generar QR</a>
-        <a href="{% url 'reportes' %}"  class="nav-tab {% block nav_reportes %}{% endblock %}"> Reportes</a>
+        {% if request.user.rol == 'profesor' %}
+    <a href="{% url 'reportes' %}" class="nav-tab {% block nav_reportes %}{% endblock %}">Reportes</a>
+    {% endif %}
+
     </nav>
 
 </header>

@@ -1,16 +1,19 @@
+from functools import wraps
 from urllib import request
 
 from django.contrib import messages
+from django.contrib.auth.models import Group
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
-
+from django.http import HttpResponseForbidden
 from personas.models import Usuario, Profesor, Estudiante
 
 
 
+
 def admincrud(request):
-    admin = Usuario.objects.filter(rol='administrador')
+    admin = Usuario.objects.filter(rol='Administracion').update(rol='administrador')
     profesores = Usuario.objects.filter(rol='profesor')
     estudiantes = Usuario.objects.filter(rol='estudiante')
 
@@ -26,7 +29,13 @@ def login_view(request):
         password = request.POST['password']
         rol = request.POST['rol']
 
+        print("Correo recibido:", email)
+        print("Existe:", Usuario.objects.filter(email=email).exists())
+
         usuario = authenticate(request, username=email, password=password)
+
+        print("Usuario:", usuario)
+        print("Rol:", usuario.rol if usuario else None)
 
         if usuario is None:
             messages.error(request, 'email o Contraseña Incorrectos')
@@ -52,20 +61,30 @@ def logout_view(request):
     return redirect('login')
 
 
-# ── VISTAS PROFESOR / ALUMNO ───────────────────────────────────────────
+# ── VISTAS PROFESOR ──
 
+def solo_profesor(vista):
+    @wraps(vista)
+    def wrapper(request, *args, **kwargs):
+        if not request.user.is_authenticated or request.user.rol not in ['profesor', 'administrador']:
+            return HttpResponseForbidden('No tienes permiso para acceder aquí.')
+
+        return vista(request, *args, **kwargs)
+    return wrapper
+
+@solo_profesor
 def inicio(request):
     return render(request, 'webapplication/inicio.html')
-
+@solo_profesor
 def clases(request):
     return render(request, 'webapplication/clases.html')
-
+@solo_profesor
 def lista(request):
     return render(request, 'webapplication/lista.html')
-
+@solo_profesor
 def codeqr(request):
     return render(request, 'webapplication/codeqr.html')
-
+@solo_profesor
 def reportes(request):
     return render(request, 'webapplication/reportes.html')
 
@@ -93,7 +112,7 @@ def nuevo_admin(request):
 
 
 
-        Usuario.objects.create_user(
+        usuario = Usuario.objects.create_user(
             email=email,
             password=password,
             rol='administrador',
@@ -101,6 +120,8 @@ def nuevo_admin(request):
             apellido=apellido,
         )
         messages.success(request, f'Administrador {nombre} {apellido} creado.')
+        grupo_admin = Group.objects.get(name='Administracion')
+        usuario.groups.add(grupo_admin)
         return redirect('admincrud')
 
 
@@ -159,7 +180,8 @@ def nuevo_estudiante(request):
         )
 
         messages.success(request, 'Estudiante creado correctamente')
-
+        grupo_estudiante = Group.objects.get(name='Estudiantes')
+        usuario.groups.add(grupo_estudiante)
     return redirect('admincrud')
 
 def editar_estudiante(request, id):
@@ -208,6 +230,8 @@ def nuevo_profesor(request):
             apellido=request.POST.get('apellido'),
             rol='profesor'
         )
+        grupo_profesor = Group.objects.get(name='Profesor')
+        usuario.groups.add(grupo_profesor)
 
         Profesor.objects.create(
             usuario=usuario,
@@ -249,3 +273,14 @@ def eliminar_profesor(request, id):
         messages.success(request, 'Profesor eliminado')
 
     return redirect('admincrud')
+
+
+
+
+
+def solo_estudiante(view_func):
+    def wrapper(request, *args, **kwargs):
+        if not request.user.is_authenticated or request.user.rol not in ['estudiante', 'profesor', 'administrador']:
+            return HttpResponseForbidden('No tienes permiso para acceder aquí.')
+        return view_func(request, *args, **kwargs)
+    return wrapper

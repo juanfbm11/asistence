@@ -389,19 +389,19 @@
                     <button type="button" class="role-btn role-admin" onclick="seleccionarRol('administrador', this)">
                         <div class="role-check">✓</div>
                         <div class="role-name">Administrador</div>
-                        <div class="role-desc">Gestión</div>
+
                     </button>
 
                     <button type="button" class="role-btn role-profesor selected" onclick="seleccionarRol('profesor', this)">
                         <div class="role-check">✓</div>
                         <div class="role-name">Profesor</div>
-                        <div class="role-desc">Clases y QR</div>
+
                     </button>
 
-                    <button type="button" class="role-btn role-alumno" onclick="seleccionarRol('alumno', this)">
+                    <button type="button" class="role-btn role-alumno" onclick="seleccionarRol('estudiante', this)">
                         <div class="role-check">✓</div>
-                        <div class="role-name">Alumno</div>
-                        <div class="role-desc">Ver asistencia</div>
+                        <div class="role-name">Estudiante</div>
+
                     </button>
 
                 </div>
@@ -418,13 +418,13 @@
                     <input type="hidden" name="rol" id="rolInput" value="profesor">
 
                     <div class="form-group">
-                        <label class="form-label" for="correo">Correo institucional</label>
+                        <label class="form-label" for="email">Correo institucional</label>
                         <div class="input-wrap">
                             <span class="input-icon">✉️</span>
                             <input
-                                type="correo"
-                                id="correo"
-                                name="correo"
+                                type="email"
+                                id="email"
+                                name="email"
                                 class="form-input"
                                 placeholder="usuario@institucion.edu.co"
                                 required
@@ -479,9 +479,9 @@ const roles = {
         btnText: 'Ingresar como Profesor',
         btnClass: 'profesor',
     },
-    alumno: {
-        label:   'Alumno',
-        btnText: 'Ingresar como Alumno',
+    estudiante: {
+        label:   'Estduiante',
+        btnText: 'Ingresar como Estudiante',
         btnClass: 'alumno',
     },
 };
@@ -489,17 +489,17 @@ const roles = {
 let rolActual = 'profesor';
 
 function seleccionarRol(rol, btn) {
-    // Quitar selected de todos
+
     document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('selected'));
 
-    // Marcar el seleccionado
+
     btn.classList.add('selected');
 
-    // Actualizar input hidden
+
     document.getElementById('rolInput').value = rol;
     rolActual = rol;
 
-    // Actualizar botón submit
+
     const cfg = roles[rol];
     const submitBtn = document.getElementById('submitBtn');
     submitBtn.className = 'submit-btn ' + cfg.btnClass;
