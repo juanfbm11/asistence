@@ -50,7 +50,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {% for u in administrador %}
+                        {% for u in admin %}
                         <tr>
                             <td class="td-id">#{{ u.id }}</td>
                             <td>
@@ -191,7 +191,6 @@
     </div>
 
 </div>
-
 
 <!-- ══ MODAL SELECTOR DE TIPO ══ -->
 <div class="modal-overlay" id="modalSelector">
@@ -574,6 +573,7 @@ function confirmarEliminar(nombre, url) {
 function cerrar(id) { document.getElementById(id).classList.remove('open'); }
 function limpiar(ids) { ids.forEach(id => { document.getElementById(id).value = ''; }); }
 
+// ── FILTRAR ──
 function filtrarTabla(tablaId, input, contadorId) {
     const q = input.value.toLowerCase();
     const filas = document.querySelectorAll('#' + tablaId + ' tbody tr');
@@ -586,7 +586,7 @@ function filtrarTabla(tablaId, input, contadorId) {
     document.getElementById(contadorId).textContent = visible + ' registros';
 }
 
-// Cerrar al clic fuera
+// ── CERRAR AL CLIC FUERA ──
 ['modalAdmin','modalProfesor','modalEstudiante','modalSelector','confirmOverlay'].forEach(id => {
     document.getElementById(id).addEventListener('click', function(e) {
         if (e.target === this) cerrar(id);

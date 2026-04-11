@@ -8,12 +8,17 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseForbidden
 from personas.models import Usuario, Profesor, Estudiante
+from django.contrib.auth.models import Group
 
+Group.objects.get_or_create(name='Administracion')
+Group.objects.get_or_create(name='Profesor')
+Group.objects.get_or_create(name='Estudiantes')
 
+print("Grupos creados:", Group.objects.all())
 
 
 def admincrud(request):
-    admin = Usuario.objects.filter(rol='Administracion').update(rol='administrador')
+    admin = Usuario.objects.filter(rol='administrador')
     profesores = Usuario.objects.filter(rol='profesor')
     estudiantes = Usuario.objects.filter(rol='estudiante')
 
@@ -52,7 +57,7 @@ def login_view(request):
         elif usuario.rol == 'profesor':
             return redirect('inicio')
         else:
-            return redirect('alumno_inicio')
+            return redirect('inicio')
 
     return render(request, 'webapplication/login.html')
 
@@ -61,30 +66,35 @@ def logout_view(request):
     return redirect('login')
 
 
-# ── VISTAS PROFESOR ──
+# ── VISTAS ──
 
-def solo_profesor(vista):
-    @wraps(vista)
-    def wrapper(request, *args, **kwargs):
-        if not request.user.is_authenticated or request.user.rol not in ['profesor', 'administrador']:
-            return HttpResponseForbidden('No tienes permiso para acceder aquí.')
+def rol_requerido(*roles_permitidos):
+    def decorator(vista):
+        @wraps(vista)
+        def wrapper(request, *args, **kwargs):
+            if not request.user.is_authenticated:
+                return redirect('login')
 
-        return vista(request, *args, **kwargs)
-    return wrapper
+            if request.user.rol not in roles_permitidos:
+                return HttpResponseForbidden("No tienes permiso")
 
-@solo_profesor
+            return vista(request, *args, **kwargs)
+        return wrapper
+    return decorator
+
+@rol_requerido('profesor', 'estudiante', 'administrador')
 def inicio(request):
     return render(request, 'webapplication/inicio.html')
-@solo_profesor
+@rol_requerido('profesor', 'estudiante', 'administrador')
 def clases(request):
     return render(request, 'webapplication/clases.html')
-@solo_profesor
+@rol_requerido('profesor', 'estudiante', 'administrador')
 def lista(request):
     return render(request, 'webapplication/lista.html')
-@solo_profesor
+@rol_requerido('profesor', 'estudiante', 'administrador')
 def codeqr(request):
     return render(request, 'webapplication/codeqr.html')
-@solo_profesor
+@rol_requerido('profesor', 'estudiante', 'administrador')
 def reportes(request):
     return render(request, 'webapplication/reportes.html')
 
@@ -278,9 +288,7 @@ def eliminar_profesor(request, id):
 
 
 
-def solo_estudiante(view_func):
-    def wrapper(request, *args, **kwargs):
-        if not request.user.is_authenticated or request.user.rol not in ['estudiante', 'profesor', 'administrador']:
-            return HttpResponseForbidden('No tienes permiso para acceder aquí.')
-        return view_func(request, *args, **kwargs)
-    return wrapper
+
+
+
+
