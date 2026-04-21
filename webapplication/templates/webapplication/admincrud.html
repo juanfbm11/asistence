@@ -68,7 +68,7 @@
                                         Editar
                                     </button>
                                     <button class="action-btn btn-delete"
-                                        onclick="confirmarEliminar('{{ u.nombre }} {{ u.apellido }}', '{% url 'eliminar_admin' u.id %}')">
+                                            onclick="confirmarEliminar('{{ u.nombre }} {{ u.apellido }}', '{% url' "eliminar_admin" 'u.id %}')">
                                         Eliminar
                                     </button>
                                 </div>
@@ -122,7 +122,7 @@
                                         Editar
                                     </button>
                                     <button class="action-btn btn-delete"
-                                        onclick="confirmarEliminar('{{ u.nombre }} {{ u.apellido }}', '{% url 'eliminar_profesor' u.id %}')">
+                                            onclick="confirmarEliminar('{{ u.nombre }}','{{ u.apellido }}','{% url', 'eliminar_profesor', 'u.id %}')">
                                         Eliminar
                                     </button>
                                 </div>
@@ -175,7 +175,7 @@
                                         Editar
                                     </button>
                                     <button class="action-btn btn-delete"
-                                        onclick="confirmarEliminar('{{ u.nombre }} {{ u.apellido }}', '{% url 'eliminar_estudiante' u.id %}')">
+                                        onclick="confirmarEliminar('{{ u.nombre }} {{ u.apellido }}', '{% url ', 'eliminar_estudiante', ' u.id %}')">
                                         Eliminar
                                     </button>
                                 </div>

@@ -21,6 +21,7 @@ urlpatterns = [
     # ── Autenticación ──
     path('',        views.login_view,  name='login'),    # / → login
     path('logout/', views.logout_view, name='logout'),
+    path('sin-permiso/', views.sin_permiso, name='sin_permiso'),
 
     # ── Profesor
     path('inicio/',   views.inicio,    name='inicio'),

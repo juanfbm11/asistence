@@ -1,0 +1,242 @@
+{% extends 'webapplication/base.html' %}
+{% load static %}
+
+{% block title %}Acceso Denegado{% endblock %}
+
+{% block content %}
+<div class="error-page">
+
+    <!-- Tarjeta principal -->
+    <div class="error-card">
+
+        <!-- Icono animado -->
+        <div class="error-icon-wrap">
+            <div class="error-icon-ring"></div>
+            <div class="error-icon">🔒</div>
+        </div>
+
+        <!-- Texto -->
+        <h1 class="error-title">Acceso Denegado</h1>
+        <p class="error-desc">
+            No tienes permiso para acceder a esta página.<br>
+            Tu rol de <strong>{{ request.user.rol|capfirst }}</strong> no tiene autorización para esta sección.
+        </p>
+
+        <!-- Rol actual -->
+        <div class="rol-chip">
+            {% if request.user.rol == 'estudiante' %}
+                Estudiante
+            {% elif request.user.rol == 'profesor' %}
+                Profesor
+            {% elif request.user.rol == 'administrador' %}
+                Administrador
+            {% endif %}
+        </div>
+
+        <!-- Acciones -->
+        <div class="error-actions">
+            {% if request.user.rol == 'estudiante' %}
+                <a href="{% url 'inicio' %}" class="btn-primary">Ir a mi inicio</a>
+            {% elif request.user.rol == 'profesor' %}
+                <a href="{% url 'inicio' %}" class="btn-primary">Ir a mi inicio</a>
+            {% elif request.user.rol == 'administrador' %}
+                <a href="{% url 'admincrud' %}" class="btn-primary">Ir al panel</a>
+            {% endif %}
+            <a href="{% url 'logout' %}" class="btn-secondary">Cerrar sesión</a>
+        </div>
+
+        <!-- Info adicional -->
+        <div class="error-hint">
+            Si crees que esto es un error, contacta al administrador del sistema.
+        </div>
+
+    </div>
+
+    <!-- Partículas de fondo -->
+    <div class="bg-particles">
+        <div class="particle p1"></div>
+        <div class="particle p2"></div>
+        <div class="particle p3"></div>
+        <div class="particle p4"></div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.error-page {
+    min-height: 70vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    position: relative;
+    overflow: hidden;
+}
+
+/* CARD */
+.error-card {
+    background: var(--card-bg);
+    border-radius: 24px;
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-lg);
+    padding: 48px 40px;
+    max-width: 480px;
+    width: 100%;
+    text-align: center;
+    position: relative;
+    z-index: 2;
+    animation: fadeUp 0.5s ease both;
+}
+@keyframes fadeUp {
+    from { opacity:0; transform:translateY(24px); }
+    to   { opacity:1; transform:translateY(0); }
+}
+
+/* ICONO */
+.error-icon-wrap {
+    position: relative;
+    width: 100px;
+    height: 100px;
+    margin: 0 auto 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.error-icon-ring {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    border: 3px solid rgba(232,68,90,0.2);
+    animation: pulse 2s ease-in-out infinite;
+}
+@keyframes pulse {
+    0%, 100% { transform: scale(1);   opacity: 1; }
+    50%       { transform: scale(1.1); opacity: 0.5; }
+}
+.error-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, rgba(232,68,90,0.1), rgba(232,68,90,0.2));
+    border: 2px solid rgba(232,68,90,0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 36px;
+}
+
+/* TEXTO */
+.error-code {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 72px;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--red), #f06070);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1;
+    margin-bottom: 8px;
+}
+.error-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--navy);
+    margin-bottom: 12px;
+}
+.error-desc {
+    font-size: 14px;
+    color: var(--text-soft);
+    line-height: 1.6;
+    margin-bottom: 20px;
+}
+.error-desc strong { color: var(--navy); }
+
+/* ROL CHIP */
+.rol-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 18px;
+    border-radius: 20px;
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-mid);
+    margin-bottom: 28px;
+}
+
+/* BOTONES */
+.error-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+}
+.btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 12px 24px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--blue-light), var(--blue));
+    color: white;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    text-decoration: none;
+    box-shadow: 0 4px 14px rgba(59,116,245,0.3);
+    transition: all 0.2s;
+}
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(59,116,245,0.4); }
+
+.btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 12px 24px;
+    border-radius: 12px;
+    border: 1.5px solid var(--border);
+    background: transparent;
+    color: var(--text-mid);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s;
+}
+.btn-secondary:hover { background: var(--surface); }
+
+/* HINT */
+.error-hint {
+    font-size: 12px;
+    color: var(--text-soft);
+    padding: 12px 16px;
+    background: var(--surface);
+    border-radius: 10px;
+    border: 1px solid var(--border);
+}
+
+/* PARTÍCULAS */
+.bg-particles { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
+.particle {
+    position: absolute;
+    border-radius: 50%;
+    opacity: 0.06;
+    animation: floatParticle 8s ease-in-out infinite;
+}
+.p1 { width:300px; height:300px; background:var(--red);        top:-80px;  left:-80px;  animation-delay:0s; }
+.p2 { width:200px; height:200px; background:var(--blue-light); bottom:-60px; right:-60px; animation-delay:-3s; }
+.p3 { width:150px; height:150px; background:var(--orange);     top:40%;   right:10%;   animation-delay:-5s; }
+.p4 { width:100px; height:100px; background:var(--green);      bottom:20%; left:10%;    animation-delay:-2s; }
+@keyframes floatParticle {
+    0%, 100% { transform: translateY(0) scale(1); }
+    50%       { transform: translateY(-20px) scale(1.05); }
+}
+</style>
+{% endblock %}

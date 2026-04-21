@@ -1,32 +1,11 @@
 from functools import wraps
-from urllib import request
-
 from django.contrib import messages
-from django.contrib.auth.models import Group
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth import  login, logout
 from django.http import HttpResponseForbidden
 from personas.models import Usuario, Profesor, Estudiante
 from django.contrib.auth.models import Group
 
-Group.objects.get_or_create(name='Administracion')
-Group.objects.get_or_create(name='Profesor')
-Group.objects.get_or_create(name='Estudiantes')
-
-print("Grupos creados:", Group.objects.all())
-
-
-def admincrud(request):
-    admin = Usuario.objects.filter(rol='administrador')
-    profesores = Usuario.objects.filter(rol='profesor')
-    estudiantes = Usuario.objects.filter(rol='estudiante')
-
-    return render(request, 'webapplication/admincrud.html', {
-        'admin': admin,
-        'profesores': profesores,
-        'estudiantes': estudiantes
-    })
 
 def login_view(request):
     if request.method == 'POST':
@@ -37,13 +16,18 @@ def login_view(request):
         print("Correo recibido:", email)
         print("Existe:", Usuario.objects.filter(email=email).exists())
 
-        usuario = authenticate(request, username=email, password=password)
+        try:
+            usuario = Usuario.objects.get(email=email)
+            if not usuario.check_password(password):
+                usuario = None
+        except Usuario.DoesNotExist:
+            usuario = None
 
         print("Usuario:", usuario)
         print("Rol:", usuario.rol if usuario else None)
 
         if usuario is None:
-            messages.error(request, 'email o Contraseña Incorrectos')
+            messages.error(request, 'Email o contraseña incorrectos.')
             return render(request, 'webapplication/login.html')
 
         if usuario.rol != rol:
@@ -74,13 +58,28 @@ def rol_requerido(*roles_permitidos):
         def wrapper(request, *args, **kwargs):
             if not request.user.is_authenticated:
                 return redirect('login')
-
             if request.user.rol not in roles_permitidos:
-                return HttpResponseForbidden("No tienes permiso")
-
+                return redirect('sin_permiso')  # ← redirige a página de error
             return vista(request, *args, **kwargs)
         return wrapper
     return decorator
+
+def sin_permiso(request):
+    return render(request, 'webapplication/sin_permiso.html')
+
+
+@rol_requerido('administrador')
+def admincrud(request):
+    admin = Usuario.objects.filter(rol='administrador')
+    profesores = Usuario.objects.filter(rol='profesor')
+    estudiantes = Usuario.objects.filter(rol='estudiante')
+
+    return render(request, 'webapplication/admincrud.html', {
+        'admin': admin,
+        'profesores': profesores,
+        'estudiantes': estudiantes
+    })
+
 
 @rol_requerido('profesor', 'estudiante', 'administrador')
 def inicio(request):
@@ -94,7 +93,7 @@ def lista(request):
 @rol_requerido('profesor', 'estudiante', 'administrador')
 def codeqr(request):
     return render(request, 'webapplication/codeqr.html')
-@rol_requerido('profesor', 'estudiante', 'administrador')
+@rol_requerido('profesor', 'administrador')
 def reportes(request):
     return render(request, 'webapplication/reportes.html')
 
@@ -130,7 +129,7 @@ def nuevo_admin(request):
             apellido=apellido,
         )
         messages.success(request, f'Administrador {nombre} {apellido} creado.')
-        grupo_admin = Group.objects.get(name='Administracion')
+        grupo_admin = Group.objects.get(name='Administrador')
         usuario.groups.add(grupo_admin)
         return redirect('admincrud')
 
@@ -196,7 +195,7 @@ def nuevo_estudiante(request):
 
 def editar_estudiante(request, id):
     usuario = get_object_or_404(Usuario, pk=id)
-    estudiante = get_object_or_404(Estudiante, usuario=usuario)
+    estudiante, _ = Estudiante.objects.get_or_create(usuario=usuario)
 
     if request.method == 'POST':
         # Usuario
@@ -240,7 +239,7 @@ def nuevo_profesor(request):
             apellido=request.POST.get('apellido'),
             rol='profesor'
         )
-        grupo_profesor = Group.objects.get(name='Profesor')
+        grupo_profesor = Group.objects.get(name='profesor')
         usuario.groups.add(grupo_profesor)
 
         Profesor.objects.create(
@@ -256,7 +255,8 @@ def nuevo_profesor(request):
 
 def editar_profesor(request, id):
     usuario = get_object_or_404(Usuario, pk=id)
-    profesor = get_object_or_404(Profesor, usuario=usuario)
+    profesor, _ = Profesor.objects.get_or_create(usuario=usuario)
+
 
     if request.method == 'POST':
         # Usuario
