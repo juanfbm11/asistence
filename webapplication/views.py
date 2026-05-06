@@ -2,9 +2,16 @@ from functools import wraps
 from django.contrib import messages
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import  login, logout
-from django.http import HttpResponseForbidden
+
+from GAA.serializers import EstudianteSerializer, ProfesorSerializer, UsuarioSerializer
+from rest_framework import viewsets
+
 from personas.models import Usuario, Profesor, Estudiante
-from django.contrib.auth.models import Group
+
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework import status
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
 
 
 def login_view(request):
@@ -68,28 +75,75 @@ def sin_permiso(request):
     return render(request, 'webapplication/sin_permiso.html')
 
 
-@rol_requerido('administrador')
+@rol_requerido('administrador', 'profesor')
 def admincrud(request):
     admin = Usuario.objects.filter(rol='administrador')
     profesores = Usuario.objects.filter(rol='profesor')
     estudiantes = Usuario.objects.filter(rol='estudiante')
+    es_administrador = request.user.rol == 'administrador'
+    es_profesor = request.user.rol == 'profesor'
 
     return render(request, 'webapplication/admincrud.html', {
         'admin': admin,
         'profesores': profesores,
-        'estudiantes': estudiantes
+        'estudiantes': estudiantes,
+        'es_administrador': es_administrador,
+        'es_profesor': es_profesor,
     })
 
 
 @rol_requerido('profesor', 'estudiante', 'administrador')
 def inicio(request):
-    return render(request, 'webapplication/inicio.html')
+    usuario = request.user
+    perfil = None
+
+    if usuario.rol == 'profesor':
+        perfil = Profesor.objects.filter(usuario=usuario).first()
+
+    elif usuario.rol == 'estudiante':
+        perfil = Estudiante.objects.filter(usuario=usuario).first()
+
+    return render(request, 'webapplication/inicio.html', {
+        'usuario': usuario,
+        'perfil': perfil
+    })
+
 @rol_requerido('profesor', 'estudiante', 'administrador')
 def clases(request):
-    return render(request, 'webapplication/clases.html')
+    usuario = request.user
+    perfil = None
+
+    if usuario.rol == 'profesor':
+        perfil = Profesor.objects.filter(usuario=usuario).first()
+
+    elif usuario.rol == 'estudiante':
+        perfil = Estudiante.objects.filter(usuario=usuario).first()
+
+    return render(request, 'webapplication/clases.html', {
+        'usuario': usuario,
+        'perfil': perfil
+    })
+
 @rol_requerido('profesor', 'estudiante', 'administrador')
 def lista(request):
-    return render(request, 'webapplication/lista.html')
+    usuario = request.user
+    perfil = None
+    estudiantes = []
+
+    if usuario.rol == 'profesor':
+        perfil = Profesor.objects.filter(usuario=usuario).first()
+        estudiantes = Estudiante.objects.all()
+
+    elif usuario.rol == 'estudiante':
+        perfil = Estudiante.objects.filter(usuario=usuario).first()
+        estudiantes = [perfil]
+
+    return render(request, 'webapplication/lista.html', {
+        'usuario': usuario,
+        'perfil': perfil,
+        'estudiantes': estudiantes
+    })
+
 @rol_requerido('profesor', 'estudiante', 'administrador')
 def codeqr(request):
     return render(request, 'webapplication/codeqr.html')
@@ -99,6 +153,7 @@ def reportes(request):
 
 
 # ── VISTA ADMINISTRADOR ────────────────────────────────────────────────
+@rol_requerido('administrador')
 def nuevo_admin(request):
     if request.method == 'POST':
         nombre = request.POST.get('nombre')
@@ -118,22 +173,20 @@ def nuevo_admin(request):
             messages.error(request, 'Ya existe un usuario con ese email.')
             return redirect('admincrud')
 
-
-
-
-        usuario = Usuario.objects.create_user(
+        Usuario.objects.create_user(
             email=email,
             password=password,
             rol='administrador',
             nombre=nombre,
             apellido=apellido,
         )
-        messages.success(request, f'Administrador {nombre} {apellido} creado.')
-        grupo_admin = Group.objects.get(name='Administrador')
-        usuario.groups.add(grupo_admin)
+        messages.success(request, f'administrador {nombre} {apellido} creado.')
         return redirect('admincrud')
 
+    return redirect('admincrud')
 
+
+@rol_requerido('administrador')
 def editar_admin(request, pk):
     admin = get_object_or_404(Usuario, pk=pk)
 
@@ -146,17 +199,19 @@ def editar_admin(request, pk):
 
 
         admin.save()
-        messages.success(request, 'Administrador actualizado.')
+        messages.success(request, 'administrador actualizado.')
     return redirect('admincrud')
 
 
+@rol_requerido('administrador')
 def eliminar_admin(request, pk):
     admin = get_object_or_404(Usuario, pk=pk)
     if request.method == 'POST':
         admin.delete()
-        messages.success(request, 'Administrador eliminado.')
+        messages.success(request, 'administrador eliminado.')
     return redirect('admincrud')
 
+@rol_requerido('administrador', 'profesor')
 def nuevo_estudiante(request):
     if request.method == 'POST':
 
@@ -171,7 +226,6 @@ def nuevo_estudiante(request):
         if Usuario.objects.filter(email=email).exists():
             messages.error(request, "Ya existe un usuario con ese email")
             return redirect('admincrud')
-
         # Crear usuario base
         usuario = Usuario.objects.create_user(
             email=email,
@@ -181,18 +235,16 @@ def nuevo_estudiante(request):
             rol='estudiante'
         )
 
-        # Crear perfil estudiante
-        Estudiante.objects.create(
-            usuario=usuario,
-            colegio=request.POST.get('colegio'),
-            clases=request.POST.get('clases')
-        )
+        # Crear o actualizar perfil estudiante
+        estudiante, _ = Estudiante.objects.get_or_create(usuario=usuario)
+        estudiante.colegio = request.POST.get('colegio')
+        estudiante.clases = request.POST.get('clases')
+        estudiante.save()
 
         messages.success(request, 'Estudiante creado correctamente')
-        grupo_estudiante = Group.objects.get(name='Estudiantes')
-        usuario.groups.add(grupo_estudiante)
     return redirect('admincrud')
 
+@rol_requerido('administrador', 'profesor')
 def editar_estudiante(request, id):
     usuario = get_object_or_404(Usuario, pk=id)
     estudiante, _ = Estudiante.objects.get_or_create(usuario=usuario)
@@ -213,6 +265,7 @@ def editar_estudiante(request, id):
 
     return redirect('admincrud')
 
+@rol_requerido('administrador')
 def eliminar_estudiante(request, id):
     usuario = get_object_or_404(Usuario, pk=id)
 
@@ -223,8 +276,10 @@ def eliminar_estudiante(request, id):
     return redirect('admincrud')
 
 
+@rol_requerido('administrador', 'profesor')
 def nuevo_profesor(request):
     if request.method == 'POST':
+        email = request.POST.get('email')
 
         password = request.POST.get('password')
 
@@ -232,27 +287,29 @@ def nuevo_profesor(request):
             messages.error(request, "La contraseña es obligatoria")
             return redirect('admincrud')
 
+        if Usuario.objects.filter(email=email).exists():
+            messages.error(request, "Ya existe un usuario con ese email")
+            return redirect('admincrud')
+
         usuario = Usuario.objects.create_user(
-            email=request.POST.get('email'),
+            email=email,
             password=password,
             nombre=request.POST.get('nombre'),
             apellido=request.POST.get('apellido'),
             rol='profesor'
         )
-        grupo_profesor = Group.objects.get(name='profesor')
-        usuario.groups.add(grupo_profesor)
 
-        Profesor.objects.create(
-            usuario=usuario,
-            colegio=request.POST.get('colegio'),
-            turno=request.POST.get('turno'),
-            clases=request.POST.get('clases')
-        )
+        profesor, _ = Profesor.objects.get_or_create(usuario=usuario)
+        profesor.colegio = request.POST.get('colegio')
+        profesor.turno = request.POST.get('turno')
+        profesor.clases = request.POST.get('clases')
+        profesor.save()
 
         messages.success(request, 'Profesor creado correctamente')
 
     return redirect('admincrud')
 
+@rol_requerido('administrador', 'profesor')
 def editar_profesor(request, id):
     usuario = get_object_or_404(Usuario, pk=id)
     profesor, _ = Profesor.objects.get_or_create(usuario=usuario)
@@ -275,6 +332,7 @@ def editar_profesor(request, id):
 
     return redirect('admincrud')
 
+@rol_requerido('administrador')
 def eliminar_profesor(request, id):
     usuario = get_object_or_404(Usuario, pk=id)
 
@@ -285,10 +343,27 @@ def eliminar_profesor(request, id):
     return redirect('admincrud')
 
 
+class UsuarioViewSet(viewsets.ModelViewSet):
+    queryset = Usuario.objects.all().order_by('rol', 'nombre', 'apellido', 'id')
+    serializer_class = UsuarioSerializer
+    permission_classes = [IsAuthenticated]
 
 
+class ProfesorViewSet(viewsets.ModelViewSet):
+    queryset = Profesor.objects.select_related('usuario').all().order_by(
+        'usuario__nombre',
+        'usuario__apellido',
+        'id',
+    )
+    serializer_class = ProfesorSerializer
+    permission_classes = [IsAuthenticated]
 
 
-
-
-
+class EstudianteViewSet(viewsets.ModelViewSet):
+    queryset = Estudiante.objects.select_related('usuario').all().order_by(
+        'usuario__nombre',
+        'usuario__apellido',
+        'id',
+    )
+    serializer_class = EstudianteSerializer
+    permission_classes = [IsAuthenticated]

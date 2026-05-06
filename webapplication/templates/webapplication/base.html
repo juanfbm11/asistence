@@ -1,27 +1,18 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 {% load static %}
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %} Sistema de Asistencia QR{% endblock %}</title>
+    <title>{% block title %}Sistema de Asistencia QR{% endblock %}</title>
 
-    <!-- Fuentes -->
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
-
-    <!-- CSS base compartido -->
     <link rel="stylesheet" href="{% static 'webapplication/css/base.css' %}">
-
-    <!-- CSS extra por página (opcional) -->
     {% block extra_css %}{% endblock %}
 </head>
 <body>
 
-<!--
-     HEADER
- -->
 <header class="site-header">
-
     <div class="header-main">
         <a href="{% url 'inicio' %}" class="header-brand">
             <div class="brand-icon">📱</div>
@@ -37,49 +28,46 @@
                 <div class="notif-badge"></div>
             </div>
             <button class="header-icon-btn" title="Mensajes">✉️</button>
-            <button class="header-icon-btn" title="Configuración">⚙️</button>
             <div class="header-divider"></div>
-            <div class="profile-chip">
-                <div class="profile-avatar">JP</div>
-                <div>
-                    <div class="profile-name">Juan Pérez</div>
-                    <div class="profile-role">Docente</div>
+
+            <div class="settings-menu profile-menu" style="position: relative;">
+                <button type="button" class="profile-chip settings-toggle" aria-expanded="false" aria-haspopup="true">
+                    <div class="profile-avatar">{% if request.user.is_authenticated %}{{ request.user.nombre|first|upper }}{{ request.user.apellido|first|upper }}{% else %}US{% endif %}</div>
+                    <div>
+                        <div class="profile-name">{% if request.user.is_authenticated %}{{ request.user.nombre }} {{ request.user.apellido }}{% else %}Usuario{% endif %}</div>
+                        <div class="profile-role">{% if request.user.is_authenticated %}{{ request.user.rol|capfirst }}{% else %}Invitado{% endif %}</div>
+                    </div>
+                    <span class="profile-arrow">▾</span>
+                </button>
+                <div class="settings-dropdown" hidden style="position: absolute; top: calc(100% + 10px); right: 0; min-width: 180px; background: #ffffff; border: 1px solid #dde4f0; border-radius: 12px; box-shadow: 0 8px 32px rgba(15,32,68,0.12); padding: 8px; z-index: 260;">
+                    <a href="{% url 'logout' %}" class="settings-item" style="display: flex; align-items: center; width: 100%; padding: 10px 12px; border-radius: 8px; text-decoration: none; font-size: 13px; font-weight: 600; color: #0f2044;">Cerrar sesión</a>
                 </div>
-                <span class="profile-arrow">▾</span>
             </div>
         </div>
     </div>
 
     <nav class="header-nav">
-        <a href="{% url 'inicio' %}"    class="nav-tab {% block nav_inicio %}{% endblock %}"> Inicio</a>
-        <a href="{% url 'clases' %}"    class="nav-tab {% block nav_clases %}{% endblock %}">Mis Clases <span class="nav-tab-badge">4</span></a>
-        <a href="{% url 'lista' %}"     class="nav-tab {% block nav_lista %}{% endblock %}">LIstado</a>
-        <a href="{% url 'codeqr' %}"    class="nav-tab {% block nav_codeqr %}{% endblock %}"> Generar QR</a>
+        <a href="{% url 'inicio' %}" class="nav-tab {% block nav_inicio %}{% endblock %}">Inicio</a>
+        <a href="{% url 'clases' %}" class="nav-tab {% block nav_clases %}{% endblock %}">Mis Clases <span class="nav-tab-badge">4</span></a>
+        <a href="{% url 'lista' %}" class="nav-tab {% block nav_lista %}{% endblock %}">Listado</a>
+        <a href="{% url 'codeqr' %}" class="nav-tab {% block nav_codeqr %}{% endblock %}">Generar QR</a>
+        <a href= 'http://127.0.0.1:8000/api/' class="nav-tab">API</a>
+        {% if request.user.rol == 'profesor' or request.user.rol == 'administrador' %}
+        <a href="{% url 'admincrud' %}" class="nav-tab {% block nav_admincrud %}{% endblock %}">Admin CRUD</a>
+        {% endif %}
         {% if request.user.rol == 'profesor' %}
-    <a href="{% url 'reportes' %}" class="nav-tab {% block nav_reportes %}{% endblock %}">Reportes</a>
-    {% endif %}
-
+        <a href="{% url 'reportes' %}" class="nav-tab {% block nav_reportes %}{% endblock %}">Reportes</a>
+        {% endif %}
     </nav>
-
 </header>
 
-
-<!-- ════════════════════════════════
-     CONTENIDO DE CADA PÁGINA
-════════════════════════════════ -->
 <main>
     {% block content %}
     {% endblock %}
 </main>
 
-
-<!-- ════════════════════════════════
-     FOOTER
-════════════════════════════════ -->
 <footer class="site-footer">
-
     <div class="footer-main">
-
         <div class="footer-brand">
             <div class="footer-brand-row">
                 <div class="footer-brand-icon">📱</div>
@@ -98,11 +86,12 @@
         <div class="footer-col">
             <h4>Navegación</h4>
             <div class="footer-links">
-                <a href="{% url 'inicio' %}"   class="footer-link">🏠 Inicio</a>
-                <a href="{% url 'clases' %}"   class="footer-link">📚 Mis Clases</a>
-                <a href="{% url 'lista' %}"    class="footer-link">👥 Alumnos</a>
-                <a href="{% url 'codeqr' %}"   class="footer-link">📲 Generar QR</a>
+                <a href="{% url 'inicio' %}" class="footer-link">🏠 Inicio</a>
+                <a href="{% url 'clases' %}" class="footer-link">📚 Mis Clases</a>
+                <a href="{% url 'lista' %}" class="footer-link">👥 Alumnos</a>
+                <a href="{% url 'codeqr' %}" class="footer-link">📲 Generar QR</a>
                 <a href="{% url 'reportes' %}" class="footer-link">📊 Reportes</a>
+
             </div>
         </div>
 
@@ -122,10 +111,9 @@
                 <a href="#" class="footer-link">❓ Ayuda</a>
                 <a href="#" class="footer-link">📖 Manual de uso</a>
                 <a href="#" class="footer-link">✉️ Contacto</a>
-                <a href="#" class="footer-link">🔒 Privacidad</a>
+                <a href="http://127.0.0.1:8000/api/" class="footer-link">🔒 Privacidad</a>
             </div>
         </div>
-
     </div>
 
     <hr class="footer-divider">
@@ -138,12 +126,46 @@
         </div>
         <div class="footer-version">v1.0.0</div>
     </div>
-
 </footer>
 
-<!-- JS base compartido -->
 <script src="{% static 'webapplication/js/base.js' %}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const settingsMenu = document.querySelector('.settings-menu');
+    const settingsToggle = document.querySelector('.settings-toggle');
+    const settingsDropdown = document.querySelector('.settings-dropdown');
+
+    if (!settingsMenu || !settingsToggle || !settingsDropdown) {
+        return;
+    }
+
+    settingsDropdown.hidden = true;
+
+    settingsToggle.addEventListener('click', function (event) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        const isOpen = settingsDropdown.hidden;
+        settingsDropdown.hidden = !isOpen;
+        settingsMenu.classList.toggle('open', isOpen);
+        settingsToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    });
+
+    settingsDropdown.addEventListener('click', function (event) {
+        event.stopPropagation();
+    });
+
+    document.addEventListener('click', function (event) {
+        if (!settingsMenu.contains(event.target)) {
+            settingsDropdown.hidden = true;
+            settingsMenu.classList.remove('open');
+            settingsToggle.setAttribute('aria-expanded', 'false');
+        }
+    });
+});
+</script>
 {% block extra_js %}{% endblock %}
 
 </body>
 </html>
+

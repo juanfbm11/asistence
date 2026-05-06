@@ -22,12 +22,29 @@
     <div class="top-grid">
         <div class="prof-card">
             <div class="prof-card-header">
-                <div class="prof-badge">Docente Activo</div>
+                <div class="prof-badge">
+                    {% if usuario.rol == 'profesor' %}
+                        Docente Activo
+                    {% elif usuario.rol == 'estudiante' %}
+                        Estudiante Activo
+                    {% else %}
+                        Administrador
+                    {% endif %}
+                </div>
                 <div class="prof-avatar-row">
-                    <div class="prof-avatar">JP</div>
+                    <div class="prof-avatar">
+                        {{ usuario.nombre|slice:":1" }}{{ usuario.apellido|slice:":1" }}
+                    </div>
                     <div>
-                        <div class="prof-name">Prof. Juan Pérez</div>
-                        <div class="prof-sub">Educación Superior</div>
+                        <div class="prof-name">
+                            {% if usuario.rol == 'profesor' %}
+                                Prof.
+                            {% endif %}
+                            {{ usuario.nombre }} {{ usuario.apellido }}
+                        </div>
+                        <div class="prof-sub">
+                            {{ usuario.rol|title }}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -35,20 +52,42 @@
                 <div class="prof-info-list">
                     <div class="prof-info-item">
                         <div class="prof-info-icon">🏫</div>
-                        <div><div class="pil">Institución</div><div class="piv">Colegio San Martín</div></div>
+                        <div><div class="pil">Institución</div>
+                            <div class="piv">
+                               {% if perfil %}
+                                    {{ perfil.colegio }}
+                                {% else %}
+                                    No registrada
+                                {% endif %}
+                            </div>
+                        </div>
                     </div>
                     <div class="prof-info-item">
                         <div class="prof-info-icon">🆔</div>
-                        <div><div class="pil">ID Docente</div><div class="piv">#DOC-2024-047</div></div>
+                        <div><div class="pil">ID Docente</div>
+                            <div class="piv">#{{ usuario.id }}</div></div>
                     </div>
+                    {% if usuario.rol == 'profesor' %}
                     <div class="prof-info-item">
                         <div class="prof-info-icon">📅</div>
-                        <div><div class="pil">Turno</div><div class="piv">Mañana · 7:00 – 13:00 hs</div></div>
+                        <div><div class="pil">Turno</div>
+                            <div class="piv">{{ perfil.turno }}</div></div>
                     </div>
+                    {% endif %}
                 </div>
                 <div class="prof-stats">
-                    <div class="prof-stat"><div class="psv">110</div><div class="psl">Alumnos</div></div>
-                    <div class="prof-stat"><div class="psv">4</div><div class="psl">Materias</div></div>
+                    <div class="prof-stat">
+                        <div class="psv">
+                            {% if perfil and perfil.clases %}
+                                1
+                            {% else %}
+                                0
+                            {% endif %}
+                        </div>
+                        <div class="psl">Alumnos</div></div>
+                    <div class="prof-stat">
+                        <div class="psv">{{ usuario.id }}</div>
+                        <div class="psl">Materias</div></div>
                 </div>
             </div>
         </div>
@@ -57,13 +96,19 @@
             <div class="summary-top">
                 <div class="s-card">
                     <div class="s-card-label">Total Clases</div>
-                    <div class="s-card-value navy">4</div>
+                    <div class="s-card-value navy">
+                        {% if perfil and perfil.clases %}
+                            1
+                        {% else %}
+                            0
+                        {% endif %}
+                    </div>
                     <div class="s-card-sub">este semestre</div>
                 </div>
                 <div class="s-card">
                     <div class="s-card-label">Total Alumnos</div>
-                    <div class="s-card-value blue">110</div>
-                    <div class="s-card-sub">matriculados</div>
+                    <div class="s-card-value blue">{{ usuario.id }}</div>
+                    <div class="s-card-sub">{{ usuario.rol }}</div>
                 </div>
                 <div class="s-card">
                     <div class="s-card-label">Asistencia</div>
@@ -97,15 +142,67 @@
     <div class="classes-grid" id="cardsView"></div>
 
     <!-- Table view -->
+    {% if perfil %}
     <div class="main-card" id="tableView">
-        <div class="main-card-header"><h3>Todas las Clases</h3></div>
+        <div class="main-card-header"><h3>{{ perfil.clases }}</h3>
+        <p>
+                {% if usuario.rol == 'profesor' %}
+                    Clase asignada para impartir
+                {% else %}
+                    Clase matriculada
+                {% endif %}
+            </p>
+
+            {% if usuario.rol == 'profesor' %}
+            <a href="{% url 'codeqr' %}" class="action-chip blue">
+                Generar QR
+            </a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+        </div>
+
         <table>
             <thead>
                 <tr>
-                    <th>Código</th><th>Materia</th><th>Alumnos</th><th>Asistencia</th><th>Acciones</th>
+                    <th>Código</th>
+                    <th>Materia</th>
+                    <th>Alumnos</th>
+                    <th>Asistencia</th>
+                    <th>Acciones</th>
                 </tr>
             </thead>
-            <tbody id="tableBody"></tbody>
+            <tbody id="tableBody">
+             <tr>
+                    <td>#{{ usuario.id }}</td>
+                    <td>{{ usuario.nombre }} {{ usuario.apellido }}</td>
+
+                    <td>
+                        {% if perfil %}
+                            {{ perfil.clases }}
+                        {% endif %}
+                    </td>
+
+                    <td>
+                        {% if perfil %}
+                            {{ perfil.colegio }}
+                        {% endif %}
+                    </td>
+
+                    <td>
+                        <a href="{% url 'lista' %}" class="action-chip blue">
+                            Ver
+                        </a>
+
+                        {% if usuario.rol == 'profesor' %}
+                        <a href="{% url 'codeqr' %}" class="action-chip blue">
+                            QR
+                        </a>
+                        {% endif %}
+                    </td>
+                </tr>
+            </tbody>
         </table>
     </div>
 

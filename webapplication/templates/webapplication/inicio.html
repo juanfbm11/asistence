@@ -11,63 +11,175 @@
 {% block content %}
 <div class="page">
 
+    <!-- Bienvenida -->
     <h2 class="welcome-title">
-        Bienvenido, <span class="text-primary">Prof. Juan Pérez</span>
+        Bienvenido,
+        <span class="text-primary">
+            {% if usuario.rol == 'profesor' %}
+                Prof.
+            {% endif %}
+            {{ usuario.nombre }} {{ usuario.apellido }}
+        </span>
     </h2>
 
-    <!-- Carnet + Panel derecho -->
     <div class="top-section">
 
-        <!-- CARNET DEL PROFESOR -->
+        <!-- CARD DEL USUARIO -->
         <div class="prof-card">
             <div class="prof-card-header">
-                <div class="prof-badge">Docente Activo</div>
+
+                <div class="prof-badge">
+                    {% if usuario.rol == 'profesor' %}
+                        Docente Activo
+                    {% elif usuario.rol == 'estudiante' %}
+                        Estudiante Activo
+                    {% else %}
+                        Administrador
+                    {% endif %}
+                </div>
+
                 <div class="prof-avatar-row">
-                    <div class="prof-avatar">JP</div>
+                    <div class="prof-avatar">
+                        {{ usuario.nombre|slice:":1" }}{{ usuario.apellido|slice:":1" }}
+                    </div>
+
                     <div class="prof-name-block">
-                        <h2>Prof. Juan Pérez</h2>
-                        <p>Educación Superior</p>
+                        <h2>
+                            {% if usuario.rol == 'profesor' %}
+                                Prof.
+                            {% endif %}
+                            {{ usuario.nombre }} {{ usuario.apellido }}
+                        </h2>
+
+                        <p>
+                            {% if usuario.rol == 'profesor' %}
+                                Docente
+                            {% elif usuario.rol == 'estudiante' %}
+                                Estudiante
+                            {% else %}
+                                Administrador
+                            {% endif %}
+                        </p>
                     </div>
                 </div>
             </div>
+
             <div class="prof-card-body">
+
                 <div class="prof-info-row">
+
+                    <!-- Colegio -->
                     <div class="prof-info-item">
                         <div class="prof-info-icon">🏫</div>
-                        <div><div class="pil">Institución</div><div class="piv">Colegio San Martín</div></div>
+                        <div>
+                            <div class="pil">Institución</div>
+                            <div class="piv">
+                                {% if perfil %}
+                                    {{ perfil.colegio }}
+                                {% else %}
+                                    No registrado
+                                {% endif %}
+                            </div>
+                        </div>
                     </div>
+
+                    <!-- Clases -->
                     <div class="prof-info-item">
                         <div class="prof-info-icon">📚</div>
-                        <div><div class="pil">Materias</div><div class="piv">Historia · Matemáticas · Inglés</div></div>
+                        <div>
+                            <div class="pil">
+                                {% if usuario.rol == 'profesor' %}
+                                    Materias
+                                {% else %}
+                                    Clase
+                                {% endif %}
+                            </div>
+                            <div class="piv">
+                                {% if perfil %}
+                                    {{ perfil.clases }}
+                                {% else %}
+                                    No asignado
+                                {% endif %}
+                            </div>
+                        </div>
                     </div>
+
+                    <!-- ID -->
                     <div class="prof-info-item">
                         <div class="prof-info-icon">🆔</div>
-                        <div><div class="pil">ID Docente</div><div class="piv">#DOC-2024-047</div></div>
+                        <div>
+                            <div class="pil">ID Usuario</div>
+                            <div class="piv">#{{ usuario.id }}</div>
+                        </div>
                     </div>
+
+                    <!-- Turno (solo profesor) -->
+                    {% if usuario.rol == 'profesor' %}
                     <div class="prof-info-item">
                         <div class="prof-info-icon">📅</div>
-                        <div><div class="pil">Turno</div><div class="piv">Mañana · 7:00 – 13:00 hs</div></div>
+                        <div>
+                            <div class="pil">Turno</div>
+                            <div class="piv">{{ perfil.turno }}</div>
+                        </div>
                     </div>
+                    {% endif %}
+
                 </div>
+
+                <!-- Estadísticas -->
                 <div class="prof-stats">
-                    <div class="prof-stat"><div class="psv">83</div><div class="psl">Alumnos</div></div>
-                    <div class="prof-stat"><div class="psv">3</div><div class="psl">Materias</div></div>
+
+                    <div class="prof-stat">
+                        <div class="psv">{{ usuario.id }}</div>
+                        <div class="psl">Usuario</div>
+                    </div>
+
+                    <div class="prof-stat">
+                        <div class="psv">
+                            {% if perfil and perfil.clases %}
+                                1
+                            {% else %}
+                                0
+                            {% endif %}
+                        </div>
+                        <div class="psl">Clases</div>
+                    </div>
+
                 </div>
+
             </div>
         </div>
 
         <!-- PANEL DERECHO -->
         <div class="right-section">
+
             <div class="welcome-header">
                 <div>
-                    <h1>¡Buenos días, <span>Juan!</span></h1>
-                    <p>Tienes 3 clases programadas esta semana.</p>
+                    <h1>
+                        ¡Buenos días,
+                        <span>{{ usuario.nombre }}</span>!
+                    </h1>
+
+                    <p>
+                        {% if usuario.rol == 'profesor' %}
+                            Gestiona tus clases y asistencias.
+                        {% elif usuario.rol == 'estudiante' %}
+                            Consulta tus asistencias y clases.
+                        {% else %}
+                            Gestiona usuarios y sistema.
+                        {% endif %}
+                    </p>
                 </div>
-                <div class="today-chip">📅 Hoy, 15 Feb</div>
+
+                <div class="today-chip">
+                    📅 Hoy
+                </div>
             </div>
 
-            <!-- Botones de acción -->
+            <!-- Botones -->
             <div class="action-buttons">
+
+                {% if usuario.rol == 'profesor' %}
                 <a href="{% url 'codeqr' %}" class="action-btn qr">
                     <div class="action-icon">📲</div>
                     <div class="action-text">
@@ -76,73 +188,81 @@
                     </div>
                     <div class="action-arrow">›</div>
                 </a>
+                {% endif %}
+
                 <a href="{% url 'lista' %}" class="action-btn list">
                     <div class="action-icon">📋</div>
                     <div class="action-text">
                         <strong>Ver Asistencias</strong>
-                        <span>Listado de alumnos</span>
+                        <span>Listado de asistencias</span>
                     </div>
                     <div class="action-arrow">›</div>
                 </a>
+
             </div>
 
             <!-- Mini estadísticas -->
             <div class="mini-stats">
+
                 <div class="mini-stat">
-                    <div class="mini-stat-label">Asistencia hoy</div>
-                    <div class="mini-stat-value">94<span>%</span></div>
-                    <div class="mini-stat-sub"><span class="dot green"></span>Normal</div>
+                    <div class="mini-stat-label">Rol</div>
+                    <div class="mini-stat-value">{{ usuario.rol }}</div>
+                    <div class="mini-stat-sub">
+                        <span class="dot green"></span>Activo
+                    </div>
                 </div>
+
                 <div class="mini-stat">
-                    <div class="mini-stat-label">Ausentes</div>
-                    <div class="mini-stat-value">5</div>
-                    <div class="mini-stat-sub"><span class="dot orange"></span>Esta semana</div>
+                    <div class="mini-stat-label">Estado</div>
+                    <div class="mini-stat-value">Online</div>
+                    <div class="mini-stat-sub">
+                        <span class="dot blue"></span>Sesión iniciada
+                    </div>
                 </div>
-                <div class="mini-stat">
-                    <div class="mini-stat-label">Clases dadas</div>
-                    <div class="mini-stat-value">12</div>
-                    <div class="mini-stat-sub"><span class="dot blue"></span>Este mes</div>
-                </div>
+
             </div>
+
         </div>
     </div>
 
     <!-- TABLA DE CLASES -->
     <div class="table-card">
+
         <div class="table-card-header">
-            <h3>📆 Clases Programadas</h3>
-            <a href="{% url 'clases' %}" class="view-all-btn">Ver todas →</a>
+            <h3>📆 Información Académica</h3>
+            <a href="{% url 'clases' %}" class="view-all-btn">Ver más →</a>
         </div>
+
         <div style="overflow-x:auto">
             <table>
                 <thead>
                     <tr>
-                        <th>Fecha</th>
-                        <th>Materia</th>
-                        <th>Alumnos</th>
-                        <th>Acción</th>
+                        <th>Usuario</th>
+                        <th>Rol</th>
+                        <th>Institución</th>
+                        <th>Clase</th>
                     </tr>
                 </thead>
+
                 <tbody>
                     <tr>
-                        <td class="date-cell">15/02/2024</td>
-                        <td><a href="{% url 'lista' %}" class="subject-link"><span class="subject-dot" style="background:#3b74f5"></span>Historia</a></td>
-                        <td><span class="student-count">👥 28</span></td>
-                        <td><a href="{% url 'codeqr' %}" class="action-chip blue">Generar QR</a></td>
-                    </tr>
-                    <tr>
-                        <td class="date-cell">14/02/2024</td>
-                        <td><a href="{% url 'lista' %}" class="subject-link"><span class="subject-dot" style="background:#00c49a"></span>Matemáticas</a></td>
-                        <td><span class="student-count">👥 30</span></td>
-                        <td><a href="{% url 'codeqr' %}" class="action-chip blue">Generar QR</a></td>
-                    </tr>
-                    <tr>
-                        <td class="date-cell">13/02/2024</td>
-                        <td><a href="{% url 'lista' %}" class="subject-link"><span class="subject-dot" style="background:#f5a623"></span>Inglés</a></td>
-                        <td><span class="student-count">👥 25</span></td>
-                        <td><a href="{% url 'codeqr' %}" class="action-chip blue">Generar QR</a></td>
+                        <td>{{ usuario.nombre }} {{ usuario.apellido }}</td>
+                        <td>{{ usuario.rol }}</td>
+
+                        <td>
+                            {% if perfil %}
+                                {{ perfil.colegio }}
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {% if perfil %}
+                                {{ perfil.clases }}
+                            {% endif %}
+                        </td>
                     </tr>
                 </tbody>
+
             </table>
         </div>
     </div>

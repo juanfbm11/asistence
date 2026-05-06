@@ -94,9 +94,50 @@ main { flex: 1; }
     width: 38px; height: 38px; border-radius: 10px; border: none;
     background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.7);
     cursor: pointer; display: flex; align-items: center; justify-content: center;
-    font-size: 17px; transition: background 0.2s, color 0.2s;
+    font-size: 17px; transition: background 0.2s, color 0.2s; text-decoration: none;
 }
 .header-icon-btn:hover { background: rgba(255,255,255,0.14); color: white; }
+
+.settings-menu { position: relative; }
+
+.settings-toggle[aria-expanded="true"] {
+    background: rgba(255,255,255,0.14);
+    color: white;
+}
+
+.settings-dropdown {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    min-width: 180px;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: var(--shadow-md);
+    padding: 8px;
+    display: none;
+    z-index: 260;
+}
+
+.settings-menu.open .settings-dropdown { display: block; }
+
+.settings-item {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    transition: background 0.2s, color 0.2s;
+}
+
+.settings-item:hover {
+    background: var(--surface);
+    color: var(--red);
+}
 
 .header-divider { width: 1px; height: 28px; background: rgba(255,255,255,0.1); margin: 0 4px; }
 
