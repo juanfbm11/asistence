@@ -1,12 +1,13 @@
-from functools import wraps
+﻿from functools import wraps
 from django.contrib import messages
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import  login, logout
+from django.http import JsonResponse
 
 from GAA.serializers import EstudianteSerializer, ProfesorSerializer, UsuarioSerializer
 from rest_framework import viewsets
 
-from personas.models import Usuario, Profesor, Estudiante
+from personas.models import Usuario, Profesor, Estudiante, Asistencia
 
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework import status
@@ -367,3 +368,43 @@ class EstudianteViewSet(viewsets.ModelViewSet):
     )
     serializer_class = EstudianteSerializer
     permission_classes = [IsAuthenticated]
+
+@rol_requerido('estudiante')
+def registrar_asistencia(request, sesion_id):
+    usuario = request.user
+    try:
+        estudiante = Estudiante.objects.get(usuario=usuario)
+    except Estudiante.DoesNotExist:
+        messages.error(request, "No eres un estudiante registrado.")
+        return redirect('inicio')
+
+    # Verificar si ya se registró
+    ya_registrado = Asistencia.objects.filter(estudiante=estudiante, sesion_id=sesion_id).exists()
+
+    if request.method == 'POST':
+        if ya_registrado:
+            messages.warning(request, "Ya has registrado tu asistencia para esta sesión.")
+        else:
+            Asistencia.objects.create(estudiante=estudiante, sesion_id=sesion_id)
+            messages.success(request, "Asistencia registrada con éxito.")
+        
+        return render(request, 'webapplication/asistencia_exitosa.html', {
+            'sesion_id': sesion_id,
+            'ya_registrado': ya_registrado
+        })
+
+    return render(request, 'webapplication/asistencia_exitosa.html', {
+        'sesion_id': sesion_id,
+        'ya_registrado': ya_registrado
+    })
+
+@rol_requerido('profesor', 'administrador')
+def obtener_asistencias(request, sesion_id):
+    asistencias = Asistencia.objects.filter(sesion_id=sesion_id).select_related('estudiante__usuario')
+    data = []
+    for asis in asistencias:
+        data.append({
+            'nombre': f"{asis.estudiante.usuario.nombre} {asis.estudiante.usuario.apellido}",
+            'hora': asis.fecha_registro.strftime("%H:%M")
+        })
+    return JsonResponse({'asistencias': data})

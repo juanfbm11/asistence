@@ -1,4 +1,4 @@
-from django.urls import include, path
+﻿from django.urls import include, path
 from . import views
 from rest_framework.authtoken.views import obtain_auth_token
 from rest_framework.routers import DefaultRouter
@@ -10,20 +10,20 @@ router.register(r'profesores', ProfesorViewSet, basename='profesor')
 router.register(r'estudiantes', EstudianteViewSet, basename='estudiante')
 
 urlpatterns = [
-    # ── Autenticación ──
+    # â”€â”€ AutenticaciÃ³n â”€â”€
     path('api/', include(router.urls)),
-    path('',        views.login_view,  name='login'),    # / → login
+    path('',        views.login_view,  name='login'),    # / â†’ login
     path('logout/', views.logout_view, name='logout'),
     path('sin-permiso/', views.sin_permiso, name='sin_permiso'),
 
-    # ── Profesor
+    # â”€â”€ Profesor
     path('inicio/',   views.inicio,    name='inicio'),
     path('clases/',   views.clases,    name='clases'),
     path('lista/',    views.lista,     name='lista'),
     path('codeqr/',   views.codeqr,    name='codeqr'),
     path('reportes/', views.reportes,  name='reportes'),
 
-    # ── Administrador ──
+    # â”€â”€ Administrador â”€â”€
     path('admincrud/', views.admincrud, name='admincrud'),
     # crear
     path('admincrud/admin/nuevo/', views.nuevo_admin, name='nuevo_admin'),
@@ -42,4 +42,7 @@ urlpatterns = [
 
     path('api/auth/token/', obtain_auth_token),
 ]
+
+
+urlpatterns += [path('asistencia/registrar/<str:sesion_id>/', views.registrar_asistencia, name='registrar_asistencia'), path('asistencia/obtener/<str:sesion_id>/', views.obtener_asistencias, name='obtener_asistencias'),]
 

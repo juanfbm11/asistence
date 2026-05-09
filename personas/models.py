@@ -1,4 +1,4 @@
-from django.db import models
+﻿from django.db import models
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 
 class UsuarioManager(BaseUserManager):
@@ -73,3 +73,15 @@ class Profesor(models.Model):
     def __str__(self):
         return f"{self.usuario.nombre} {self.usuario.apellido}"
 
+class Asistencia(models.Model):
+    estudiante = models.ForeignKey(Estudiante, on_delete=models.CASCADE, related_name='asistencias')
+    sesion_id = models.CharField(max_length=100)
+    fecha_registro = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('estudiante', 'sesion_id')
+        verbose_name = 'Asistencia'
+        verbose_name_plural = 'Asistencias'
+
+    def __str__(self):
+        return f"{self.estudiante} - {self.sesion_id} - {self.fecha_registro}"
