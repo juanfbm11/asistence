@@ -10,20 +10,23 @@ router.register(r'profesores', ProfesorViewSet, basename='profesor')
 router.register(r'estudiantes', EstudianteViewSet, basename='estudiante')
 
 urlpatterns = [
-    # â”€â”€ AutenticaciÃ³n â”€â”€
+    # ── Autenticación ──
     path('api/', include(router.urls)),
-    path('',        views.login_view,  name='login'),    # / â†’ login
+    path('',        views.login_view,  name='login'),    # / → login
     path('logout/', views.logout_view, name='logout'),
     path('sin-permiso/', views.sin_permiso, name='sin_permiso'),
 
-    # â”€â”€ Profesor
+    # ── Profesor
     path('inicio/',   views.inicio,    name='inicio'),
     path('clases/',   views.clases,    name='clases'),
     path('lista/',    views.lista,     name='lista'),
     path('codeqr/',   views.codeqr,    name='codeqr'),
     path('reportes/', views.reportes,  name='reportes'),
+    path('api/qr/generar/', views.generar_qr, name='generar_qr'),
+    path('api/qr/<uuid:token>/estado/', views.estado_qr, name='estado_qr'),
+    path('asistencia/registrar/<uuid:token>/', views.registrar_asistencia_qr, name='registrar_asistencia_qr'),
 
-    # â”€â”€ Administrador â”€â”€
+    # ── Administrador ──
     path('admincrud/', views.admincrud, name='admincrud'),
     # crear
     path('admincrud/admin/nuevo/', views.nuevo_admin, name='nuevo_admin'),
@@ -42,7 +45,4 @@ urlpatterns = [
 
     path('api/auth/token/', obtain_auth_token),
 ]
-
-
-urlpatterns += [path('asistencia/registrar/<str:sesion_id>/', views.registrar_asistencia, name='registrar_asistencia'), path('asistencia/obtener/<str:sesion_id>/', views.obtener_asistencias, name='obtener_asistencias'),]
 

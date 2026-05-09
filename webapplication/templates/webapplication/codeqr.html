@@ -14,9 +14,40 @@
     <div class="page-header">
         <div>
             <a href="{% url 'clases' %}" class="back-link">← Volver a Clases</a>
-            <h1>📲 Código QR <span class="materia-chip" id="materiaNombre">Historia</span></h1>
+            <h1>📲 Código QR
+                {% if clase %}
+                    <span class="materia-chip">{{ clase.nombre }}</span>
+                {% else %}
+                    <span class="materia-chip" style="opacity:.5">Selecciona una clase</span>
+                {% endif %}
+            </h1>
         </div>
     </div>
+
+    <!-- ── Selector de clase ── -->
+    {% if mis_clases %}
+    <div class="filter-bar" style="margin-bottom:20px">
+        <span class="filter-label">Clase:</span>
+        <select class="filter-select" onchange="irAClase(this.value)">
+            <option value="">— Selecciona una clase —</option>
+            {% for c in mis_clases %}
+            <option value="{{ c.id }}" {% if clase and clase.id == c.id %}selected{% endif %}>
+                {{ c.nombre }} ({{ c.codigo }})
+            </option>
+            {% endfor %}
+        </select>
+    </div>
+    {% endif %}
+
+    {% if not clase %}
+    <!-- Estado vacío -->
+    <div style="text-align:center;padding:80px 20px;color:var(--text-soft)">
+        <div style="font-size:64px;margin-bottom:16px">📲</div>
+        <h2 style="color:var(--navy);margin-bottom:8px">Selecciona una clase</h2>
+        <p>Elige una clase del selector de arriba para generar su código QR.</p>
+    </div>
+
+    {% else %}
 
     <!-- Stats rápidas -->
     <div class="stats-strip">
@@ -25,7 +56,7 @@
             <div class="stat-mini-label">Escaneados</div>
         </div>
         <div class="stat-mini">
-            <div class="stat-mini-val soft" id="pendientesCount">28</div>
+            <div class="stat-mini-val soft" id="pendientesCount">{{ total_alumnos }}</div>
             <div class="stat-mini-label">Pendientes</div>
         </div>
         <div class="stat-mini">
@@ -42,26 +73,25 @@
                 <h2>Código de Asistencia</h2>
                 <p>Muestra este QR a tus alumnos para que registren su asistencia</p>
                 <div class="meta-chips">
-                    <div class="meta-chip">📚 Historia</div>
-                    <div class="meta-chip">👥 28 alumnos</div>
-                    <div class="meta-chip">📍 Aula 12</div>
+                    <div class="meta-chip">📚 {{ clase.nombre }}</div>
+                    <div class="meta-chip">👥 {{ total_alumnos }} alumnos</div>
+                    {% if clase.aula %}<div class="meta-chip">📍 {{ clase.aula }}</div>{% endif %}
                     <div class="live-badge"><div class="live-dot"></div> En vivo</div>
                 </div>
             </div>
 
             <div class="qr-display">
-                <!-- QR canvas generado por JS -->
                 <div class="qr-frame">
                     <div class="qr-frame-inner" id="qrFrameInner">
                         <div class="qr-corner tl"></div>
                         <div class="qr-corner tr"></div>
                         <div class="qr-corner bl"></div>
                         <div class="qr-corner br"></div>
-                        <canvas id="qrCanvas" width="220" height="220"></canvas>
-                        <div class="qr-expired-overlay" id="expiredOverlay">
+                        <div id="qrCanvas"></div>
+                        <div class="qr-expired-overlay" id="expiredOverlay" style="display:none">
                             <div style="font-size:36px">⏰</div>
                             <h3>Código Expirado</h3>
-                            <p>Genera un nuevo código<br>para continuar</p>
+                            <p>Pulsa "Regenerar código"<br>para continuar</p>
                         </div>
                     </div>
                 </div>
@@ -81,10 +111,11 @@
                     </div>
                 </div>
 
-                <!-- Botones -->
                 <div class="qr-actions">
                     <button class="qr-btn qr-btn-secondary" onclick="copiarLink()">🔗 Copiar enlace</button>
-                    <button class="qr-btn qr-btn-regen" onclick="regenerar()">🔄 Regenerar código</button>
+                    <button class="qr-btn qr-btn-regen"    onclick="regenerar()">🔄 Regenerar código</button>
+                    <a href="{% url 'lista' %}?clase_id={{ clase.id }}"
+                       class="qr-btn qr-btn-secondary">👥 Ver lista</a>
                 </div>
             </div>
         </div>
@@ -96,11 +127,15 @@
                 <div class="info-card-body">
                     <div class="info-row">
                         <div class="info-label">🏛️ Materia</div>
-                        <div class="info-value">Historia</div>
+                        <div class="info-value">{{ clase.nombre }}</div>
                     </div>
                     <div class="info-row">
                         <div class="info-label">👨‍🏫 Docente</div>
-                        <div class="info-value">Prof. Juan Pérez</div>
+                        <div class="info-value">
+                            {% if clase.profesor %}
+                                Prof. {{ clase.profesor.usuario.nombre }} {{ clase.profesor.usuario.apellido }}
+                            {% else %}—{% endif %}
+                        </div>
                     </div>
                     <div class="info-row">
                         <div class="info-label">📅 Fecha</div>
@@ -110,13 +145,21 @@
                         <div class="info-label">🕐 Hora</div>
                         <div class="info-value" id="horaHoy">—</div>
                     </div>
+                    {% if clase.aula %}
                     <div class="info-row">
                         <div class="info-label">📍 Aula</div>
-                        <div class="info-value">Aula 12</div>
+                        <div class="info-value">{{ clase.aula }}</div>
+                    </div>
+                    {% endif %}
+                    <div class="info-row">
+                        <div class="info-label">🔑 Código</div>
+                        <div class="info-value blue">{{ clase.codigo }}</div>
                     </div>
                     <div class="info-row">
-                        <div class="info-label">🔑 Código sesión</div>
-                        <div class="info-value blue" id="codigoSesion">#HIS-001</div>
+                        <div class="info-label">🔐 Token sesión</div>
+                        <div class="info-value blue" id="tokenDisplay" style="font-size:11px;word-break:break-all">
+                            {{ sesion_token|truncatechars:16 }}…
+                        </div>
                     </div>
                 </div>
             </div>
@@ -124,7 +167,10 @@
             <div class="info-card">
                 <div class="info-card-header" style="display:flex;align-items:center;justify-content:space-between">
                     <span>✅ Alumnos Registrados</span>
-                    <span class="live-badge"><div class="live-dot"></div> <span id="escaneadosLabel">0 / 28</span></span>
+                    <span class="live-badge">
+                        <div class="live-dot"></div>
+                        <span id="escaneadosLabel">0 / {{ total_alumnos }}</span>
+                    </span>
                 </div>
                 <div class="info-card-body" style="padding:12px">
                     <div class="scanned-list" id="scannedList">
@@ -137,11 +183,36 @@
             </div>
         </div>
 
-    </div>
+    </div><!-- /main-grid -->
+    {% endif %}<!-- /if clase -->
+
 </div>
 {% endblock %}
 
 {% block extra_js %}
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+{% if clase and sesion %}
+<script>
+    const QR_URL = "{{ qr_url|escapejs }}";
+    const SESION_TOKEN = "{{ sesion_token|escapejs }}";
+    const EXPIRA_EN = new Date("{{ expira_en_iso|escapejs }}");
+    let segundosRestantes = {{ segundos_restantes|default:0 }};
+    const TOTAL_ALUMNOS = {{ total_alumnos|default:0 }};
+    const URL_ESTADO = `/api/qr/${SESION_TOKEN}/estado/`;
+    const URL_LISTA_CLASE = "{% url 'lista' %}?clase_id={{ clase.id }}";
+    const CLASE_ID = {{ clase.id }};
+    const CSRF_TOKEN = "{{ csrf_token }}";
+</script>
+
 <script src="{% static 'webapplication/js/codeqr.js' %}"></script>
+{% endif %}
+
+<script>
+function irAClase(claseId) {
+    if (claseId) {
+        window.location.href = "{% url 'codeqr' %}?clase_id=" + claseId;
+    }
+}
+</script>
 {% endblock %}

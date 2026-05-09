@@ -2,12 +2,14 @@
 from django.contrib import messages
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import  login, logout
-from django.http import JsonResponse
+from django.urls import reverse
+from django.utils.text import slugify
+from django.utils import timezone
 
 from GAA.serializers import EstudianteSerializer, ProfesorSerializer, UsuarioSerializer
 from rest_framework import viewsets
 
-from personas.models import Usuario, Profesor, Estudiante, Asistencia
+from personas.models import Usuario, Profesor, Estudiante, Clase, QRSesion, Asistencia
 
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework import status
@@ -74,6 +76,33 @@ def rol_requerido(*roles_permitidos):
 
 def sin_permiso(request):
     return render(request, 'webapplication/sin_permiso.html')
+
+
+def asegurar_clase_desde_perfil(profesor):
+    if not profesor or not profesor.clases:
+        return None
+
+    nombre = profesor.clases.strip()
+    if not nombre:
+        return None
+
+    codigo_base = slugify(nombre).upper()[:20] or 'CLASE'
+    codigo = f"P{profesor.id}-{codigo_base}"[:30]
+    clase, _ = Clase.objects.get_or_create(
+        profesor=profesor,
+        nombre__iexact=nombre,
+        defaults={
+            'nombre': nombre,
+            'codigo': codigo,
+            'aula': profesor.colegio or '',
+        },
+    )
+
+    estudiantes = Estudiante.objects.filter(clases__iexact=nombre)
+    if estudiantes.exists():
+        clase.estudiantes.add(*estudiantes)
+
+    return clase
 
 
 @rol_requerido('administrador', 'profesor')
@@ -147,7 +176,115 @@ def lista(request):
 
 @rol_requerido('profesor', 'estudiante', 'administrador')
 def codeqr(request):
-    return render(request, 'webapplication/codeqr.html')
+    usuario = request.user
+
+    if usuario.rol == 'profesor':
+        perfil = Profesor.objects.filter(usuario=usuario).first()
+        asegurar_clase_desde_perfil(perfil)
+        mis_clases = Clase.objects.filter(profesor=perfil, activa=True) if perfil else Clase.objects.none()
+    elif usuario.rol == 'estudiante':
+        perfil = Estudiante.objects.filter(usuario=usuario).first()
+        mis_clases = perfil.mis_clases.filter(activa=True) if perfil else Clase.objects.none()
+    else:
+        mis_clases = Clase.objects.filter(activa=True)
+
+    clase_id = request.GET.get('clase_id')
+    clase = mis_clases.filter(id=clase_id).first() if clase_id else mis_clases.first()
+
+    context = {
+        'mis_clases': mis_clases,
+        'clase': clase,
+        'total_alumnos': 0,
+    }
+
+    if clase:
+        sesion = clase.sesiones_qr.filter(activa=True, expira_en__gt=timezone.now()).first()
+        if not sesion:
+            sesion = QRSesion.objects.create(clase=clase)
+
+        qr_url = request.build_absolute_uri(
+            reverse('registrar_asistencia_qr', args=[str(sesion.token)])
+        )
+        context.update({
+            'sesion': sesion,
+            'sesion_token': str(sesion.token),
+            'qr_url': qr_url,
+            'expira_en_iso': sesion.expira_en.isoformat(),
+            'segundos_restantes': sesion.segundos_restantes,
+            'total_alumnos': clase.total_estudiantes(),
+        })
+
+    return render(request, 'webapplication/codeqr.html', context)
+
+@rol_requerido('profesor', 'estudiante', 'administrador')
+@api_view(['POST'] )
+@permission_classes([IsAuthenticated])
+def generar_qr(request):
+    clase = get_object_or_404(Clase, pk=request.data.get('clase_id'))
+
+    if request.user.rol == 'profesor':
+        profesor = Profesor.objects.filter(usuario=request.user).first()
+        if clase.profesor_id != getattr(profesor, 'id', None):
+            return Response({'detail': 'No tienes permiso para esta clase.'}, status=status.HTTP_403_FORBIDDEN)
+    elif request.user.rol != 'administrador':
+        return Response({'detail': 'No tienes permiso para generar QR.'}, status=status.HTTP_403_FORBIDDEN)
+
+    clase.sesiones_qr.filter(activa=True).update(activa=False)
+    sesion = QRSesion.objects.create(clase=clase)
+    return Response({
+        'token': str(sesion.token),
+        'expira_en': sesion.expira_en.isoformat(),
+    }, status=status.HTTP_201_CREATED)
+
+@rol_requerido('profesor', 'estudiante', 'administrador')
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def estado_qr(request, token):
+    sesion = get_object_or_404(QRSesion.objects.select_related('clase'), token=token)
+    asistencias = sesion.asistencias.filter(estado='presente').select_related('estudiante__usuario')
+    presentes = [
+        {
+            'nombre': asistencia.estudiante.usuario.nombre,
+            'apellido': asistencia.estudiante.usuario.apellido,
+            'email': asistencia.estudiante.usuario.email,
+        }
+        for asistencia in asistencias
+    ]
+
+    return Response({
+        'expirada': sesion.expirada,
+        'total_escaneados': len(presentes),
+        'total_clase': sesion.clase.total_estudiantes(),
+        'presentes': presentes,
+    })
+
+
+@rol_requerido('estudiante')
+def registrar_asistencia_qr(request, token):
+    sesion = get_object_or_404(QRSesion.objects.select_related('clase'), token=token)
+    estudiante = get_object_or_404(Estudiante, usuario=request.user)
+    ya_registrado = Asistencia.objects.filter(
+        estudiante=estudiante,
+        clase=sesion.clase,
+        fecha=timezone.localdate(),
+    ).exists()
+
+    if request.method == 'POST' and not ya_registrado and not sesion.expirada:
+        Asistencia.objects.create(
+            estudiante=estudiante,
+            clase=sesion.clase,
+            sesion_qr=sesion,
+            estado='presente',
+        )
+        ya_registrado = True
+
+    return render(request, 'webapplication/asistencia_exitosa.html', {
+        'sesion_id': str(sesion.token),
+        'ya_registrado': ya_registrado,
+        'sesion_expirada': sesion.expirada,
+    })
+
+
 @rol_requerido('profesor', 'administrador')
 def reportes(request):
     return render(request, 'webapplication/reportes.html')
@@ -368,43 +505,3 @@ class EstudianteViewSet(viewsets.ModelViewSet):
     )
     serializer_class = EstudianteSerializer
     permission_classes = [IsAuthenticated]
-
-@rol_requerido('estudiante')
-def registrar_asistencia(request, sesion_id):
-    usuario = request.user
-    try:
-        estudiante = Estudiante.objects.get(usuario=usuario)
-    except Estudiante.DoesNotExist:
-        messages.error(request, "No eres un estudiante registrado.")
-        return redirect('inicio')
-
-    # Verificar si ya se registró
-    ya_registrado = Asistencia.objects.filter(estudiante=estudiante, sesion_id=sesion_id).exists()
-
-    if request.method == 'POST':
-        if ya_registrado:
-            messages.warning(request, "Ya has registrado tu asistencia para esta sesión.")
-        else:
-            Asistencia.objects.create(estudiante=estudiante, sesion_id=sesion_id)
-            messages.success(request, "Asistencia registrada con éxito.")
-        
-        return render(request, 'webapplication/asistencia_exitosa.html', {
-            'sesion_id': sesion_id,
-            'ya_registrado': ya_registrado
-        })
-
-    return render(request, 'webapplication/asistencia_exitosa.html', {
-        'sesion_id': sesion_id,
-        'ya_registrado': ya_registrado
-    })
-
-@rol_requerido('profesor', 'administrador')
-def obtener_asistencias(request, sesion_id):
-    asistencias = Asistencia.objects.filter(sesion_id=sesion_id).select_related('estudiante__usuario')
-    data = []
-    for asis in asistencias:
-        data.append({
-            'nombre': f"{asis.estudiante.usuario.nombre} {asis.estudiante.usuario.apellido}",
-            'hora': asis.fecha_registro.strftime("%H:%M")
-        })
-    return JsonResponse({'asistencias': data})
