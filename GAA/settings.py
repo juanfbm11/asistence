@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'webapplication',
     'personas',
     'rest_framework',
+    'rest_framework.authtoken',
 
 ]
 

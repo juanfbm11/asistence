@@ -259,35 +259,214 @@ def estado_qr(request, token):
     })
 
 
-@rol_requerido('estudiante')
+@rol_requerido('profesor', 'estudiante', 'administrador')
 def registrar_asistencia_qr(request, token):
-    sesion = get_object_or_404(QRSesion.objects.select_related('clase'), token=token)
-    estudiante = get_object_or_404(Estudiante, usuario=request.user)
+    p
+    sesion = get_object_or_404(
+        QRSesion.objects.select_related('clase'),
+        token=token
+    )
+
+    estudiante = get_object_or_404(
+        Estudiante,
+        usuario=request.user
+    )
+
+    # ─────────────────────────────
+    # VALIDAR SI YA EXISTE
+    # ─────────────────────────────
     ya_registrado = Asistencia.objects.filter(
         estudiante=estudiante,
         clase=sesion.clase,
         fecha=timezone.localdate(),
     ).exists()
 
-    if request.method == 'POST' and not ya_registrado and not sesion.expirada:
+    # ─────────────────────────────
+    # REGISTRAR AUTOMÁTICAMENTE
+    # ─────────────────────────────
+    if not ya_registrado and not sesion.expirada:
+
         Asistencia.objects.create(
             estudiante=estudiante,
             clase=sesion.clase,
             sesion_qr=sesion,
             estado='presente',
         )
+
         ya_registrado = True
 
-    return render(request, 'webapplication/asistencia_exitosa.html', {
-        'sesion_id': str(sesion.token),
-        'ya_registrado': ya_registrado,
-        'sesion_expirada': sesion.expirada,
-    })
-
+    return render(
+        request,
+        'webapplication/asistencia_exitosa.html',
+        {
+            'sesion_id': str(sesion.token),
+            'ya_registrado': ya_registrado,
+            'sesion_expirada': sesion.expirada,
+            'clase': sesion.clase,
+        }
+    )
 
 @rol_requerido('profesor', 'administrador')
 def reportes(request):
-    return render(request, 'webapplication/reportes.html')
+
+    usuario = request.user
+
+    # ─────────────────────────────────────
+    # FILTRAR CLASES SEGÚN EL USUARIO
+    # ─────────────────────────────────────
+    if usuario.rol == 'profesor':
+        profesor = Profesor.objects.filter(usuario=usuario).first()
+        clases = Clase.objects.filter(profesor=profesor)
+
+    else:
+        clases = Clase.objects.all()
+
+    asistencias = Asistencia.objects.filter(clase__in=clases)
+
+    # ─────────────────────────────────────
+    # KPIs GENERALES
+    # ─────────────────────────────────────
+    total_clases = clases.count()
+
+    total_asistencias = asistencias.count()
+
+    presentes = asistencias.filter(estado='presente').count()
+
+    ausentes = asistencias.filter(estado='ausente').count()
+
+    justificados = asistencias.filter(estado='justificado').count()
+
+    promedio_asistencia = 0
+
+    if total_asistencias > 0:
+        promedio_asistencia = round(
+            (presentes / total_asistencias) * 100
+        )
+
+    # ─────────────────────────────────────
+    # ALUMNOS EN RIESGO
+    # (<70% asistencia)
+    # ─────────────────────────────────────
+    alumnos_riesgo = []
+
+    estudiantes = Estudiante.objects.filter(
+        mis_clases__in=clases
+    ).distinct()
+
+    for estudiante in estudiantes:
+
+        total_est = Asistencia.objects.filter(
+            estudiante=estudiante,
+            clase__in=clases
+        ).count()
+
+        presentes_est = Asistencia.objects.filter(
+            estudiante=estudiante,
+            clase__in=clases,
+            estado='presente'
+        ).count()
+
+        porcentaje = 0
+
+        if total_est > 0:
+            porcentaje = round((presentes_est / total_est) * 100)
+
+        if porcentaje < 70:
+            alumnos_riesgo.append({
+                'nombre': f'{estudiante.usuario.nombre} {estudiante.usuario.apellido}',
+                'porcentaje': porcentaje
+            })
+
+    # ─────────────────────────────────────
+    # ASISTENCIA POR MATERIA
+    # ─────────────────────────────────────
+    materias = []
+
+    for clase in clases:
+
+        total = Asistencia.objects.filter(
+            clase=clase
+        ).count()
+
+        presentes_clase = Asistencia.objects.filter(
+            clase=clase,
+            estado='presente'
+        ).count()
+
+        porcentaje = 0
+
+        if total > 0:
+            porcentaje = round((presentes_clase / total) * 100)
+
+        materias.append({
+            'nombre': clase.nombre,
+            'porcentaje': porcentaje
+        })
+
+    # ─────────────────────────────────────
+    # RANKING DE ESTUDIANTES
+    # ─────────────────────────────────────
+    ranking = []
+
+    for estudiante in estudiantes:
+
+        total = Asistencia.objects.filter(
+            estudiante=estudiante,
+            clase__in=clases
+        ).count()
+
+        presentes_est = Asistencia.objects.filter(
+            estudiante=estudiante,
+            clase__in=clases,
+            estado='presente'
+        ).count()
+
+        porcentaje = 0
+
+        if total > 0:
+            porcentaje = round((presentes_est / total) * 100)
+
+        ranking.append({
+            'nombre': f'{estudiante.usuario.nombre} {estudiante.usuario.apellido}',
+            'porcentaje': porcentaje
+        })
+
+    ranking = sorted(
+        ranking,
+        key=lambda x: x['porcentaje'],
+        reverse=True
+    )
+
+    # ─────────────────────────────────────
+    # ALERTAS
+    # ─────────────────────────────────────
+    alertas = []
+
+    for alumno in alumnos_riesgo:
+
+        alertas.append({
+            'tipo': 'danger',
+            'mensaje': f"{alumno['nombre']} tiene {alumno['porcentaje']}% de asistencia"
+        })
+
+    context = {
+        'total_clases': total_clases,
+        'promedio_asistencia': promedio_asistencia,
+        'alumnos_riesgo_total': len(alumnos_riesgo),
+        'ausencias_totales': ausentes,
+        'presentes': presentes,
+        'ausentes': ausentes,
+        'justificados': justificados,
+        'materias': materias,
+        'ranking': ranking[:10],
+        'alertas': alertas,
+    }
+
+    return render(
+        request,
+        'webapplication/reportes.html',
+        context
+    )
 
 
 # ── VISTA ADMINISTRADOR ────────────────────────────────────────────────

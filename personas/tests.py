@@ -1,5 +1,6 @@
 from django.test import TestCase, override_settings
 from django.urls import reverse
+from rest_framework.test import APIClient
 
 from personas.models import Asistencia, Clase, Estudiante, Profesor, QRSesion, Usuario
 
@@ -16,6 +17,7 @@ class WebApplicationTests(TestCase):
         )
 
     def setUp(self):
+        self.api_client = APIClient()
         self.admin = self.crear_usuario(
             email='admin@test.com',
             rol='administrador',
@@ -154,3 +156,90 @@ class WebApplicationTests(TestCase):
         usuario = Usuario.objects.get(email='nuevo.profesor@test.com')
         self.assertEqual(usuario.rol, 'profesor')
         self.assertTrue(Profesor.objects.filter(usuario=usuario, clases='historia').exists())
+
+    def test_api_requiere_autenticacion(self):
+        response = self.api_client.get(reverse('usuario-list'))
+
+        self.assertIn(response.status_code, [401, 403])
+
+    def test_api_lista_usuarios_autenticado(self):
+        self.api_client.force_authenticate(user=self.admin)
+
+        response = self.api_client.get(reverse('usuario-list'))
+
+        self.assertEqual(response.status_code, 200)
+        emails = [usuario['email'] for usuario in response.json()]
+        self.assertIn('admin@test.com', emails)
+        self.assertIn('profesor@test.com', emails)
+        self.assertIn('estudiante@test.com', emails)
+
+    def test_api_crea_profesor_con_perfil(self):
+        self.api_client.force_authenticate(user=self.admin)
+
+        response = self.api_client.post(reverse('profesor-list'), {
+            'nombre': 'Api',
+            'apellido': 'Profesor',
+            'email': 'api.profesor@test.com',
+            'password': '123456',
+            'colegio': 'TDEA',
+            'turno': 'tarde',
+            'clases': 'fisica',
+        }, format='json')
+
+        self.assertEqual(response.status_code, 201)
+        usuario = Usuario.objects.get(email='api.profesor@test.com')
+        self.assertEqual(usuario.rol, 'profesor')
+        self.assertTrue(Profesor.objects.filter(
+            usuario=usuario,
+            colegio='TDEA',
+            turno='tarde',
+            clases='fisica',
+        ).exists())
+
+    def test_api_crea_estudiante_con_perfil(self):
+        self.api_client.force_authenticate(user=self.admin)
+
+        response = self.api_client.post(reverse('estudiante-list'), {
+            'nombre': 'Api',
+            'apellido': 'Estudiante',
+            'email': 'api.estudiante@test.com',
+            'password': '123456',
+            'colegio': 'TDEA',
+            'clases': 'fisica',
+        }, format='json')
+
+        self.assertEqual(response.status_code, 201)
+        usuario = Usuario.objects.get(email='api.estudiante@test.com')
+        self.assertEqual(usuario.rol, 'estudiante')
+        self.assertTrue(Estudiante.objects.filter(
+            usuario=usuario,
+            colegio='TDEA',
+            clases='fisica',
+        ).exists())
+
+    def test_api_qr_genera_y_consulta_estado(self):
+        self.api_client.force_authenticate(user=self.profesor_user)
+        self.api_client.force_login(self.profesor_user)
+        clase = Clase.objects.create(
+            nombre='quimica',
+            codigo='QUI-001',
+            profesor=self.profesor,
+        )
+        clase.estudiantes.add(self.estudiante)
+
+        generar_response = self.api_client.post(
+            reverse('generar_qr'),
+            {'clase_id': clase.id},
+            format='json',
+        )
+
+        self.assertEqual(generar_response.status_code, 201)
+        token = generar_response.json()['token']
+
+        estado_response = self.api_client.get(reverse('estado_qr', args=[token]))
+
+        self.assertEqual(estado_response.status_code, 200)
+        estado_data = estado_response.json()
+        self.assertEqual(estado_data['total_clase'], 1)
+        self.assertEqual(estado_data['total_escaneados'], 0)
+        self.assertEqual(estado_data['presentes'], [])
