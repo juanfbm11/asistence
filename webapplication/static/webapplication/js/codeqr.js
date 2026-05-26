@@ -161,7 +161,7 @@ function actualizarPresentes(data) {
         if (data.presentes.length === 0) {
             elList.innerHTML = `
                 <div class="empty-state">
-                    <div style="font-size:32px;margin-bottom:8px">📱</div>
+                    <div style="font-size:32px;margin-bottom:8px">QR</div>
                     <div>Esperando escaneos...</div>
                 </div>`;
         } else {
@@ -183,7 +183,7 @@ function actualizarPresentes(data) {
                         </div>
                         <div style="font-size:11px;color:#8a97b4">${p.email}</div>
                     </div>
-                    <div style="margin-left:auto;font-size:16px">✅</div>
+                    <div style="margin-left:auto;font-size:16px">OK</div>
                 </div>
             `).join('');
         }
@@ -243,8 +243,8 @@ function copiarLink() {
     navigator.clipboard.writeText(QR_URL).then(() => {
         const btn = document.querySelector('.qr-btn-secondary');
         if (btn) {
-            btn.textContent = '✅ Copiado';
-            setTimeout(() => { btn.textContent = '🔗 Copiar enlace'; }, 2000);
+            btn.textContent = 'Copiado';
+            setTimeout(() => { btn.textContent = 'Copiar enlace'; }, 2000);
         }
     }).catch(() => {
         prompt('Copia este enlace:', QR_URL);

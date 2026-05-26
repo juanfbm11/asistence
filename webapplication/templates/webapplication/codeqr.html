@@ -1,7 +1,7 @@
 {% extends 'webapplication/base.html' %}
 {% load static %}
 
-{% block title %}Código QR – Sistema de Asistencia QR{% endblock %}
+{% block title %}Codigo QR - Sistema de Asistencia QR{% endblock %}
 {% block nav_codeqr %}active{% endblock %}
 
 {% block extra_css %}
@@ -13,8 +13,8 @@
 
     <div class="page-header">
         <div>
-            <a href="{% url 'clases' %}" class="back-link">← Volver a Clases</a>
-            <h1>📲 Código QR
+            <a href="{% url 'clases' %}" class="back-link">Volver a Clases</a>
+            <h1>Codigo QR
                 {% if clase %}
                     <span class="materia-chip">{{ clase.nombre }}</span>
                 {% else %}
@@ -24,12 +24,11 @@
         </div>
     </div>
 
-    <!-- ── Selector de clase ── -->
     {% if mis_clases %}
     <div class="filter-bar" style="margin-bottom:20px">
         <span class="filter-label">Clase:</span>
         <select class="filter-select" onchange="irAClase(this.value)">
-            <option value="">— Selecciona una clase —</option>
+            <option value="">Selecciona una clase</option>
             {% for c in mis_clases %}
             <option value="{{ c.id }}" {% if clase and clase.id == c.id %}selected{% endif %}>
                 {{ c.nombre }} ({{ c.codigo }})
@@ -40,16 +39,14 @@
     {% endif %}
 
     {% if not clase %}
-    <!-- Estado vacío -->
     <div style="text-align:center;padding:80px 20px;color:var(--text-soft)">
-        <div style="font-size:64px;margin-bottom:16px">📲</div>
+        <div style="font-size:64px;margin-bottom:16px">QR</div>
         <h2 style="color:var(--navy);margin-bottom:8px">Selecciona una clase</h2>
-        <p>Elige una clase del selector de arriba para generar su código QR.</p>
+        <p>Elige una clase del selector de arriba para generar su codigo QR.</p>
     </div>
 
     {% else %}
 
-    <!-- Stats rápidas -->
     <div class="stats-strip">
         <div class="stat-mini">
             <div class="stat-mini-val" id="escaneadosCount">0</div>
@@ -67,15 +64,14 @@
 
     <div class="main-grid">
 
-        <!-- QR Card -->
         <div class="qr-card">
             <div class="qr-card-top">
-                <h2>Código de Asistencia</h2>
-                <p>Muestra este QR a tus alumnos para que registren su asistencia</p>
+                <h2>Codigo de Asistencia</h2>
+                <p>Muestra este QR a tus alumnos para que registren su asistencia.</p>
                 <div class="meta-chips">
-                    <div class="meta-chip">📚 {{ clase.nombre }}</div>
-                    <div class="meta-chip">👥 {{ total_alumnos }} alumnos</div>
-                    {% if clase.aula %}<div class="meta-chip">📍 {{ clase.aula }}</div>{% endif %}
+                    <div class="meta-chip">Clase: {{ clase.nombre }}</div>
+                    <div class="meta-chip">Alumnos: {{ total_alumnos }}</div>
+                    {% if clase.aula %}<div class="meta-chip">Aula: {{ clase.aula }}</div>{% endif %}
                     <div class="live-badge"><div class="live-dot"></div> En vivo</div>
                 </div>
             </div>
@@ -89,14 +85,13 @@
                         <div class="qr-corner br"></div>
                         <div id="qrCanvas"></div>
                         <div class="qr-expired-overlay" id="expiredOverlay" style="display:none">
-                            <div style="font-size:36px">⏰</div>
-                            <h3>Código Expirado</h3>
-                            <p>Pulsa "Regenerar código"<br>para continuar</p>
+                            <div style="font-size:36px">!</div>
+                            <h3>Codigo Expirado</h3>
+                            <p>Pulsa "Regenerar codigo"<br>para continuar</p>
                         </div>
                     </div>
                 </div>
 
-                <!-- Timer circular -->
                 <div class="timer-section">
                     <div class="timer-label">Tiempo restante</div>
                     <div class="timer-ring-wrap">
@@ -112,53 +107,51 @@
                 </div>
 
                 <div class="qr-actions">
-                    <button class="qr-btn qr-btn-secondary" onclick="copiarLink()">🔗 Copiar enlace</button>
-                    <button class="qr-btn qr-btn-regen"    onclick="regenerar()">🔄 Regenerar código</button>
-                    <a href="{% url 'lista' %}?clase_id={{ clase.id }}"
-                       class="qr-btn qr-btn-secondary">👥 Ver lista</a>
+                    <button class="qr-btn qr-btn-secondary" onclick="copiarLink()">Copiar enlace</button>
+                    <button class="qr-btn qr-btn-regen" onclick="regenerar()">Regenerar codigo</button>
+                    <a href="{% url 'lista' %}?clase_id={{ clase.id }}" class="qr-btn qr-btn-secondary">Ver lista</a>
                 </div>
             </div>
         </div>
 
-        <!-- Panel lateral -->
         <div class="side-panel">
             <div class="info-card">
-                <div class="info-card-header">📋 Información de la Clase</div>
+                <div class="info-card-header">Informacion de la Clase</div>
                 <div class="info-card-body">
                     <div class="info-row">
-                        <div class="info-label">🏛️ Materia</div>
+                        <div class="info-label">Materia</div>
                         <div class="info-value">{{ clase.nombre }}</div>
                     </div>
                     <div class="info-row">
-                        <div class="info-label">👨‍🏫 Docente</div>
+                        <div class="info-label">Docente</div>
                         <div class="info-value">
                             {% if clase.profesor %}
                                 Prof. {{ clase.profesor.usuario.nombre }} {{ clase.profesor.usuario.apellido }}
-                            {% else %}—{% endif %}
+                            {% else %}Sin docente{% endif %}
                         </div>
                     </div>
                     <div class="info-row">
-                        <div class="info-label">📅 Fecha</div>
-                        <div class="info-value" id="fechaHoy">—</div>
+                        <div class="info-label">Fecha</div>
+                        <div class="info-value" id="fechaHoy">-</div>
                     </div>
                     <div class="info-row">
-                        <div class="info-label">🕐 Hora</div>
-                        <div class="info-value" id="horaHoy">—</div>
+                        <div class="info-label">Hora</div>
+                        <div class="info-value" id="horaHoy">-</div>
                     </div>
                     {% if clase.aula %}
                     <div class="info-row">
-                        <div class="info-label">📍 Aula</div>
+                        <div class="info-label">Aula</div>
                         <div class="info-value">{{ clase.aula }}</div>
                     </div>
                     {% endif %}
                     <div class="info-row">
-                        <div class="info-label">🔑 Código</div>
+                        <div class="info-label">Codigo</div>
                         <div class="info-value blue">{{ clase.codigo }}</div>
                     </div>
                     <div class="info-row">
-                        <div class="info-label">🔐 Token sesión</div>
+                        <div class="info-label">Token sesion</div>
                         <div class="info-value blue" id="tokenDisplay" style="font-size:11px;word-break:break-all">
-                            {{ sesion_token|truncatechars:16 }}…
+                            {{ sesion_token|truncatechars:16 }}
                         </div>
                     </div>
                 </div>
@@ -166,7 +159,7 @@
 
             <div class="info-card">
                 <div class="info-card-header" style="display:flex;align-items:center;justify-content:space-between">
-                    <span>✅ Alumnos Registrados</span>
+                    <span>Alumnos Registrados</span>
                     <span class="live-badge">
                         <div class="live-dot"></div>
                         <span id="escaneadosLabel">0 / {{ total_alumnos }}</span>
@@ -175,7 +168,7 @@
                 <div class="info-card-body" style="padding:12px">
                     <div class="scanned-list" id="scannedList">
                         <div class="empty-state">
-                            <div style="font-size:32px;margin-bottom:8px">📱</div>
+                            <div style="font-size:32px;margin-bottom:8px">QR</div>
                             <div>Esperando escaneos...</div>
                         </div>
                     </div>
@@ -183,8 +176,8 @@
             </div>
         </div>
 
-    </div><!-- /main-grid -->
-    {% endif %}<!-- /if clase -->
+    </div>
+    {% endif %}
 
 </div>
 {% endblock %}
