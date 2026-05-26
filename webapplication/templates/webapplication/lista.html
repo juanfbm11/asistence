@@ -1,7 +1,7 @@
 {% extends 'webapplication/base.html' %}
 {% load static %}
 
-{% block title %}Lista de Alumnos – Sistema de Asistencia QR{% endblock %}
+{% block title %}Lista de Alumnos - Sistema de Asistencia QR{% endblock %}
 {% block nav_lista %}active{% endblock %}
 
 {% block extra_css %}
@@ -13,50 +13,73 @@
 
     <div class="page-header">
         <div>
-            <a href="{% url 'inicio' %}" class="back-link">← Volver al inicio</a>
-            <h1>Lista de Alumnos <span class="materia-chip">Historia</span></h1>
+            <a href="{% url 'inicio' %}" class="back-link">Volver al inicio</a>
+            <h1>
+                Lista de Alumnos
+                {% if clase %}
+                    <span class="materia-chip">{{ clase.nombre }}</span>
+                {% else %}
+                    <span class="materia-chip" style="opacity:.55">Sin clase</span>
+                {% endif %}
+            </h1>
         </div>
-        <div class="header-controls">
+        <form method="get" class="header-controls">
+            {% if clase %}
+                <input type="hidden" name="clase_id" value="{{ clase.id }}">
+            {% endif %}
             <div class="date-input-wrap">
-                <label>📅 Fecha:</label>
-                <input type="date" id="fechaClase">
+                <label>Fecha:</label>
+                <input type="date" name="fecha" id="fechaClase" value="{{ fecha|date:'Y-m-d' }}" onchange="this.form.submit()">
             </div>
-        </div>
+        </form>
     </div>
 
-    <!-- Resumen -->
+    {% if mis_clases %}
+    <form method="get" class="filter-bar" style="margin-bottom:20px">
+        <span class="filter-label">Clase:</span>
+        <select class="filter-select" name="clase_id" onchange="this.form.submit()">
+            {% for c in mis_clases %}
+            <option value="{{ c.id }}" {% if clase and clase.id == c.id %}selected{% endif %}>
+                {{ c.nombre }} ({{ c.codigo }})
+            </option>
+            {% endfor %}
+        </select>
+        <input type="hidden" name="fecha" value="{{ fecha|date:'Y-m-d' }}">
+    </form>
+    {% endif %}
+
     <div class="summary-row">
         <div class="summary-card">
-            <div class="s-label">Total Alumnos</div>
-            <div class="s-value navy" id="totalCount">5</div>
-            <div class="s-sub">en esta clase</div>
+            <div class="summary-card-label">Total Alumnos</div>
+            <div class="summary-card-value navy" id="totalCount">{{ total_alumnos }}</div>
+            <div class="summary-card-sub">en esta clase</div>
         </div>
         <div class="summary-card">
-            <div class="s-label">Presentes</div>
-            <div class="s-value green" id="presenteCount">0</div>
-            <div class="s-sub">hoy</div>
+            <div class="summary-card-label">Presentes</div>
+            <div class="summary-card-value green" id="presenteCount">{{ presentes }}</div>
+            <div class="summary-card-sub">en la fecha</div>
         </div>
         <div class="summary-card">
-            <div class="s-label">Ausentes</div>
-            <div class="s-value red" id="ausenteCount">0</div>
-            <div class="s-sub">hoy</div>
+            <div class="summary-card-label">Ausentes</div>
+            <div class="summary-card-value red" id="ausenteCount">{{ ausentes }}</div>
+            <div class="summary-card-sub">sin registro</div>
         </div>
         <div class="summary-card">
-            <div class="s-label">Justificados</div>
-            <div class="s-value orange" id="justificadoCount">0</div>
-            <div class="s-sub">hoy</div>
+            <div class="summary-card-label">Justificados</div>
+            <div class="summary-card-value orange" id="justificadoCount">{{ justificados }}</div>
+            <div class="summary-card-sub">en la fecha</div>
         </div>
     </div>
 
-    <!-- Tabla -->
     <div class="main-card">
         <div class="main-card-header">
-            <h3>👥 Registro de Asistencia</h3>
+            <h3>Registro de Asistencia</h3>
             <div class="search-box">
-                <span>🔍</span>
-                <input type="text" placeholder="Buscar alumno..." id="searchInput" oninput="filtrar()">
+                <span>Buscar</span>
+                <input type="text" placeholder="Nombre o correo..." id="searchInput" oninput="filtrar()">
             </div>
         </div>
+
         <div style="overflow-x:auto">
             <table id="tablaAlumnos">
                 <thead>
@@ -64,16 +87,78 @@
                         <th>Alumno</th>
                         <th>Correo</th>
                         <th>Asistencia general</th>
-                        <th>Estado hoy</th>
-                        <th>Acción</th>
+                        <th>Estado</th>
+                        <th>Registro QR</th>
                         <th>Historial</th>
                     </tr>
                 </thead>
-                <tbody id="tbody"></tbody>
+                <tbody id="tbody">
+                    {% for fila in filas %}
+                    <tr>
+                        <td>
+                            <div class="student-info">
+                                <div class="student-avatar" style="background:{{ clase.color|default:'#3b74f5' }}">
+                                    {{ fila.estudiante.usuario.nombre|first }}{{ fila.estudiante.usuario.apellido|first }}
+                                </div>
+                                <div>
+                                    <div class="student-name">
+                                        {{ fila.estudiante.usuario.nombre }} {{ fila.estudiante.usuario.apellido }}
+                                    </div>
+                                    <div class="student-doc">{{ fila.estudiante.colegio|default:'Sin colegio' }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>{{ fila.estudiante.usuario.email }}</td>
+                        <td>
+                            <div class="attendance-wrap">
+                                <div class="attendance-label">
+                                    <span class="attendance-pct">{{ fila.porcentaje }}%</span>
+                                    <span class="attendance-detail">historico</span>
+                                </div>
+                                <div class="bar-track">
+                                    <div class="bar-fill" style="width:{{ fila.porcentaje }}%; background: {{ clase.color|default:'#3b74f5' }}"></div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="state-buttons">
+                                <span class="state-btn presente-btn {% if fila.estado == 'presente' %}active{% endif %}">
+                                    Presente
+                                </span>
+                                <span class="state-btn ausente-btn {% if fila.estado == 'ausente' %}active{% endif %}">
+                                    Ausente
+                                </span>
+                                <span class="state-btn justificado-btn {% if fila.estado == 'justificado' %}active{% endif %}">
+                                    Justificado
+                                </span>
+                            </div>
+                        </td>
+                        <td>
+                            {% if fila.registrado_en %}
+                                {{ fila.registrado_en|date:'H:i' }}
+                            {% else %}
+                                <span class="status-badge badge-pendiente">Sin escaneo</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% for asistencia in fila.historial %}
+                                <span class="history-chip badge-{{ asistencia.estado }}">
+                                    {{ asistencia.fecha|date:'d/m' }} {{ asistencia.get_estado_display }}
+                                </span>
+                            {% empty %}
+                                <span class="status-badge badge-pendiente">Sin historial</span>
+                            {% endfor %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" style="text-align:center;padding:34px;color:var(--text-soft)">
+                            No hay estudiantes para mostrar en esta clase.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
             </table>
-        </div>
-        <div class="main-card-footer">
-            <button class="save-btn" onclick="guardar()">💾 Guardar registro</button>
         </div>
     </div>
 

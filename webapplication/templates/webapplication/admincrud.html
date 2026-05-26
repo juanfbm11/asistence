@@ -211,12 +211,10 @@
                                                     onclick="abrirEditarEstudiante('{{ u.id }}','{{ u.nombre }}','{{ u.apellido }}','{{ u.email }}','{{ u.estudiante.colegio }}','{{ u.estudiante.clases }}')">
                                                 Editar
                                             </button>
-                                            {% if es_administrador %}
-                                                <button class="action-btn btn-delete"
-                                                        onclick="confirmarEliminar('{{ u.nombre|escapejs }} {{ u.apellido|escapejs }}', '{% url 'eliminar_estudiante' u.id %}')">
-                                                    Eliminar
-                                                </button>
-                                            {% endif %}
+                                            <button class="action-btn btn-delete"
+                                                    onclick="confirmarEliminar('{{ u.nombre|escapejs }} {{ u.apellido|escapejs }}', '{% url 'eliminar_estudiante' u.id %}')">
+                                                Eliminar
+                                            </button>
                                         </div>
                                     </td>
                                 </tr>

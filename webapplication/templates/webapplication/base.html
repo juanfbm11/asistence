@@ -131,35 +131,20 @@
 <script src="{% static 'webapplication/js/base.js' %}"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    const settingsMenu = document.querySelector('.settings-menu');
-    const settingsToggle = document.querySelector('.settings-toggle');
-    const settingsDropdown = document.querySelector('.settings-dropdown');
+    const toggle   = document.querySelector('.settings-toggle');
+    const dropdown = document.querySelector('.settings-dropdown');
+    if (!toggle || !dropdown) return;
 
-    if (!settingsMenu || !settingsToggle || !settingsDropdown) {
-        return;
-    }
-
-    settingsDropdown.hidden = true;
-
-    settingsToggle.addEventListener('click', function (event) {
-        event.preventDefault();
-        event.stopPropagation();
-
-        const isOpen = settingsDropdown.hidden;
-        settingsDropdown.hidden = !isOpen;
-        settingsMenu.classList.toggle('open', isOpen);
-        settingsToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    toggle.addEventListener('click', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        const abierto = dropdown.style.display === 'block';
+        dropdown.style.display = abierto ? 'none' : 'block';
     });
 
-    settingsDropdown.addEventListener('click', function (event) {
-        event.stopPropagation();
-    });
-
-    document.addEventListener('click', function (event) {
-        if (!settingsMenu.contains(event.target)) {
-            settingsDropdown.hidden = true;
-            settingsMenu.classList.remove('open');
-            settingsToggle.setAttribute('aria-expanded', 'false');
+    document.addEventListener('click', function (e) {
+        if (!toggle.contains(e.target) && !dropdown.contains(e.target)) {
+            dropdown.style.display = 'none';
         }
     });
 });

@@ -416,6 +416,7 @@
                 <form method="POST" action="{% url 'login' %}" id="loginForm">
                     {% csrf_token %}
                     <input type="hidden" name="rol" id="rolInput" value="profesor">
+                    <input type="hidden" name="next" value="{{ request.GET.next }}">
 
                     <div class="form-group">
                         <label class="form-label" for="email">Correo institucional</label>

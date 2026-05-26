@@ -62,7 +62,7 @@ class WebApplicationTests(TestCase):
 
     def test_vista_protegida_redirige_si_no_hay_sesion(self):
         response = self.client.get(reverse('inicio'))
-        self.assertRedirects(response, reverse('login'))
+        self.assertRedirects(response, f"{reverse('login')}?next={reverse('inicio')}")
 
     def test_profesor_puede_cargar_vistas_principales(self):
         self.client.force_login(self.profesor_user)
@@ -129,8 +129,61 @@ class WebApplicationTests(TestCase):
         sesion = QRSesion.objects.create(clase=clase)
         self.client.force_login(self.estudiante_user)
 
-        response = self.client.post(reverse('registrar_asistencia_qr', args=[sesion.token]))
+        response = self.client.post(reverse('registrar_asistencia_qr_token', args=[sesion.token]))
 
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(Asistencia.objects.filter(
+            estudiante=self.estudiante,
+            clase=clase,
+            sesion_qr=sesion,
+            estado='presente',
+        ).exists())
+
+    def test_lista_muestra_estudiante_presente_despues_de_asistencia(self):
+        clase = Clase.objects.create(
+            nombre='informatica',
+            codigo='INF-004',
+            profesor=self.profesor,
+        )
+        clase.estudiantes.add(self.estudiante)
+        sesion = QRSesion.objects.create(clase=clase)
+        Asistencia.objects.create(
+            estudiante=self.estudiante,
+            clase=clase,
+            sesion_qr=sesion,
+            estado='presente',
+        )
+        self.client.force_login(self.profesor_user)
+
+        response = self.client.get(reverse('lista'), {'clase_id': clase.id})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Estudiante Uno')
+        self.assertContains(response, 'estudiante@test.com')
+        self.assertContains(response, 'Presente')
+
+    def test_estudiante_vuelve_al_qr_despues_de_login_y_registra_asistencia(self):
+        clase = Clase.objects.create(
+            nombre='informatica',
+            codigo='INF-003',
+            profesor=self.profesor,
+        )
+        clase.estudiantes.add(self.estudiante)
+        sesion = QRSesion.objects.create(clase=clase)
+        qr_path = reverse('registrar_asistencia_qr_token', args=[sesion.token])
+
+        response = self.client.get(qr_path)
+        self.assertRedirects(response, f"{reverse('login')}?next={qr_path}", fetch_redirect_response=False)
+
+        response = self.client.post(reverse('login'), {
+            'email': 'estudiante@test.com',
+            'password': '123456',
+            'rol': 'estudiante',
+            'next': qr_path,
+        })
+        self.assertRedirects(response, qr_path)
+
+        response = self.client.get(qr_path)
         self.assertEqual(response.status_code, 200)
         self.assertTrue(Asistencia.objects.filter(
             estudiante=self.estudiante,
@@ -156,6 +209,23 @@ class WebApplicationTests(TestCase):
         usuario = Usuario.objects.get(email='nuevo.profesor@test.com')
         self.assertEqual(usuario.rol, 'profesor')
         self.assertTrue(Profesor.objects.filter(usuario=usuario, clases='historia').exists())
+
+    def test_profesor_ve_boton_eliminar_estudiante(self):
+        self.client.force_login(self.profesor_user)
+
+        response = self.client.get(reverse('admincrud'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, reverse('eliminar_estudiante', args=[self.estudiante_user.id]))
+        self.assertContains(response, 'Eliminar')
+
+    def test_profesor_puede_eliminar_estudiante(self):
+        self.client.force_login(self.profesor_user)
+
+        response = self.client.post(reverse('eliminar_estudiante', args=[self.estudiante_user.id]))
+
+        self.assertRedirects(response, reverse('admincrud'))
+        self.assertFalse(Usuario.objects.filter(id=self.estudiante_user.id).exists())
 
     def test_api_requiere_autenticacion(self):
         response = self.api_client.get(reverse('usuario-list'))

@@ -27,7 +27,17 @@ SECRET_KEY = 'django-insecure-eax=2dbtty@342=83y*85=2qu_9+hdx3byl!qqz+mm9cvy11(#
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    '127.0.0.1',
+    'localhost',
+    'smashing-plunder-varmint.ngrok-free.dev',
+    '.ngrok-free.dev',
+]
+
+CSRF_TRUSTED_ORIGINS = [
+    'https://smashing-plunder-varmint.ngrok-free.dev',
+    'https://*.ngrok-free.dev',
+]
 
 
 # Application definition

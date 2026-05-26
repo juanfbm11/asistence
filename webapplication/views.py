@@ -3,6 +3,8 @@ from django.contrib import messages
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import  login, logout
 from django.urls import reverse
+from django.utils.http import url_has_allowed_host_and_scheme
+from django.utils.dateparse import parse_date
 from django.utils.text import slugify
 from django.utils import timezone
 
@@ -46,6 +48,14 @@ def login_view(request):
 
         login(request, usuario)
 
+        siguiente = request.POST.get('next') or request.GET.get('next')
+        if siguiente and url_has_allowed_host_and_scheme(
+            url=siguiente,
+            allowed_hosts={request.get_host()},
+            require_https=request.is_secure(),
+        ):
+            return redirect(siguiente)
+
         if usuario.rol == 'administrador':
             return redirect('admincrud')
         elif usuario.rol == 'profesor':
@@ -67,7 +77,7 @@ def rol_requerido(*roles_permitidos):
         @wraps(vista)
         def wrapper(request, *args, **kwargs):
             if not request.user.is_authenticated:
-                return redirect('login')
+                return redirect(f"{reverse('login')}?next={request.get_full_path()}")
             if request.user.rol not in roles_permitidos:
                 return redirect('sin_permiso')  # ← redirige a página de error
             return vista(request, *args, **kwargs)
@@ -158,20 +168,83 @@ def clases(request):
 def lista(request):
     usuario = request.user
     perfil = None
-    estudiantes = []
+    mis_clases = Clase.objects.none()
+    clase = None
+    estudiantes = Estudiante.objects.none()
+
+    fecha = parse_date(request.GET.get('fecha', '')) or timezone.localdate()
 
     if usuario.rol == 'profesor':
         perfil = Profesor.objects.filter(usuario=usuario).first()
-        estudiantes = Estudiante.objects.all()
+        asegurar_clase_desde_perfil(perfil)
+        mis_clases = Clase.objects.filter(profesor=perfil, activa=True) if perfil else Clase.objects.none()
 
     elif usuario.rol == 'estudiante':
         perfil = Estudiante.objects.filter(usuario=usuario).first()
-        estudiantes = [perfil]
+        mis_clases = perfil.mis_clases.filter(activa=True) if perfil else Clase.objects.none()
+
+    elif usuario.rol == 'administrador':
+        mis_clases = Clase.objects.filter(activa=True)
+
+    clase_id = request.GET.get('clase_id')
+    clase = mis_clases.filter(id=clase_id).first() if clase_id else mis_clases.first()
+
+    if clase:
+        if usuario.rol == 'estudiante':
+            estudiantes = Estudiante.objects.filter(pk=perfil.pk) if perfil else Estudiante.objects.none()
+        else:
+            estudiantes = clase.estudiantes.select_related('usuario').order_by(
+                'usuario__apellido',
+                'usuario__nombre',
+            )
+
+    asistencias_hoy = {
+        asistencia.estudiante_id: asistencia
+        for asistencia in Asistencia.objects.filter(
+            clase=clase,
+            fecha=fecha,
+            estudiante__in=estudiantes,
+        ).select_related('estudiante__usuario', 'sesion_qr')
+    } if clase else {}
+
+    filas = []
+    for estudiante in estudiantes:
+        asistencia = asistencias_hoy.get(estudiante.id)
+        total_registros = Asistencia.objects.filter(clase=clase, estudiante=estudiante).count()
+        total_presentes = Asistencia.objects.filter(
+            clase=clase,
+            estudiante=estudiante,
+            estado='presente',
+        ).count()
+        porcentaje = round(total_presentes / total_registros * 100) if total_registros else 0
+        historial = Asistencia.objects.filter(
+            clase=clase,
+            estudiante=estudiante,
+        ).order_by('-fecha')[:5]
+        filas.append({
+            'estudiante': estudiante,
+            'asistencia': asistencia,
+            'estado': asistencia.estado if asistencia else 'ausente',
+            'registrado_en': asistencia.registrado_en if asistencia else None,
+            'porcentaje': porcentaje,
+            'historial': historial,
+        })
+
+    presentes = sum(1 for fila in filas if fila['estado'] == 'presente')
+    justificados = sum(1 for fila in filas if fila['estado'] == 'justificado')
+    ausentes = max(len(filas) - presentes - justificados, 0)
 
     return render(request, 'webapplication/lista.html', {
         'usuario': usuario,
         'perfil': perfil,
-        'estudiantes': estudiantes
+        'mis_clases': mis_clases,
+        'clase': clase,
+        'fecha': fecha,
+        'filas': filas,
+        'total_alumnos': len(filas),
+        'presentes': presentes,
+        'ausentes': ausentes,
+        'justificados': justificados,
     })
 
 @rol_requerido('profesor', 'estudiante', 'administrador')
@@ -198,13 +271,19 @@ def codeqr(request):
     }
 
     if clase:
-        sesion = clase.sesiones_qr.filter(activa=True, expira_en__gt=timezone.now()).first()
+        sesion = clase.sesiones_qr.filter(
+            activa=True,
+            expira_en__gt=timezone.now()
+        ).first()
+
         if not sesion:
             sesion = QRSesion.objects.create(clase=clase)
 
+
         qr_url = request.build_absolute_uri(
-            reverse('registrar_asistencia_qr', args=[str(sesion.token)])
+            reverse('registrar_asistencia_qr_token', args=[str(sesion.token)])
         )
+
         context.update({
             'sesion': sesion,
             'sesion_token': str(sesion.token),
@@ -213,7 +292,6 @@ def codeqr(request):
             'segundos_restantes': sesion.segundos_restantes,
             'total_alumnos': clase.total_estudiantes(),
         })
-
     return render(request, 'webapplication/codeqr.html', context)
 
 @rol_requerido('profesor', 'estudiante', 'administrador')
@@ -260,8 +338,8 @@ def estado_qr(request, token):
 
 
 @rol_requerido('profesor', 'estudiante', 'administrador')
-def registrar_asistencia_qr(request, token):
-    p
+def registrar_asistencia_qr(request, token=None):
+    token = token or request.GET.get('token')
     sesion = get_object_or_404(
         QRSesion.objects.select_related('clase'),
         token=token
@@ -582,7 +660,7 @@ def editar_estudiante(request, id):
 
     return redirect('admincrud')
 
-@rol_requerido('administrador')
+@rol_requerido('administrador', 'profesor')
 def eliminar_estudiante(request, id):
     usuario = get_object_or_404(Usuario, pk=id)
 

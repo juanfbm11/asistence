@@ -24,7 +24,8 @@ urlpatterns = [
     path('reportes/', views.reportes,  name='reportes'),
     path('api/qr/generar/', views.generar_qr, name='generar_qr'),
     path('api/qr/<uuid:token>/estado/', views.estado_qr, name='estado_qr'),
-    path('asistencia/registrar/<uuid:token>/', views.registrar_asistencia_qr, name='registrar_asistencia_qr'),
+    path('asistencia/registrar/', views.registrar_asistencia_qr, name='registrar_asistencia_qr'),
+    path('asistencia/registrar/<uuid:token>/', views.registrar_asistencia_qr, name='registrar_asistencia_qr_token'),
 
     # ── Administrador ──
     path('admincrud/', views.admincrud, name='admincrud'),
