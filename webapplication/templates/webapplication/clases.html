@@ -1,6 +1,5 @@
-{% extends 'webapplication/base.html' %} {% load static %} {% block title %}Mis
-Clases – Sistema de Asistencia QR{% endblock %} {% block nav_clases %}active{%
-endblock %} {% block extra_css %}
+{% extends 'webapplication/base.html' %} {% load static %} {% block title %}
+Mis Clases – Sistema de Asistencia QR{% endblock %} {% block nav_clases %}active{% endblock %} {% block extra_css %}
 <link rel="stylesheet" href="{% static 'webapplication/css/clases.css' %}" />
 <style>
   .action-chip {
@@ -199,17 +198,14 @@ endblock %} {% block extra_css %}
     <div class="prof-card">
       <div class="prof-card-header">
         <div class="prof-badge">
-          {% if usuario.rol == 'profesor' %}Docente Activo {% elif usuario.rol
-          == 'estudiante' %}Estudiante Activo {% else %}Administrador{% endif %}
+          {% if usuario.rol == 'profesor' %}Docente Activo {% elif usuario.rol == 'estudiante' %}Estudiante Activo {% else %}Administrador{% endif %}
         </div>
         <div class="prof-avatar-row">
-          <div class="prof-avatar">
-            {{ usuario.nombre|slice:":1" }}{{ usuario.apellido|slice:":1" }}
+          <div class="prof-avatar"> {{ usuario.nombre|slice:":1" }}{{ usuario.apellido|slice:":1" }}
           </div>
           <div>
             <div class="prof-name">
-              {% if usuario.rol == 'profesor' %}Prof. {% endif %} {{
-              usuario.nombre }} {{ usuario.apellido }}
+              {% if usuario.rol == 'profesor' %}Prof. {% endif %} {{usuario.nombre }} {{ usuario.apellido }}
             </div>
             <div class="prof-sub">{{ usuario.rol|title }}</div>
           </div>
@@ -222,8 +218,7 @@ endblock %} {% block extra_css %}
             <div>
               <div class="pil">Institución</div>
               <div class="piv">
-                {% if perfil %}{{ perfil.colegio }}{% else %}No registrada{%
-                endif %}
+                {% if perfil %}{{ perfil.colegio }}{% else %}No registrada{% endif %}
               </div>
             </div>
           </div>
@@ -265,7 +260,7 @@ endblock %} {% block extra_css %}
         <div class="s-card">
           <div class="s-card-label">Total Clases</div>
           <div class="s-card-value navy">
-            {% if perfil and perfil.clases %}1{% else %}0{% endif %}
+            {% if perfil and perfil.clases %}1{% else %} 0 {% endif %}
           </div>
           <div class="s-card-sub">este semestre</div>
         </div>
@@ -274,8 +269,7 @@ endblock %} {% block extra_css %}
           <div
             class="s-card-value blue"
             style="font-size: 14px; margin-top: 6px">
-            {% if perfil %}{{ perfil.colegio|truncatechars:15 }}{% else %}—{%
-            endif %}
+            {% if perfil %}{{ perfil.colegio|truncatechars:15 }}{% else %} — {% endif %}
           </div>
           <div class="s-card-sub">institución</div>
         </div>
@@ -297,12 +291,8 @@ endblock %} {% block extra_css %}
             oninput="filtrarCards()" />
         </div>
         <div class="view-toggle">
-          <button class="vtbtn active" id="vCards" onclick="setView('cards')">
-            ⊞ Tarjetas
-          </button>
-          <button class="vtbtn" id="vTable" onclick="setView('table')">
-            ☰ Tabla
-          </button>
+          <button class="vtbtn active" id="vCards" onclick="setView('cards')"> ⊞ Tarjetas </button>
+          <button class="vtbtn" id="vTable" onclick="setView('table')">☰ Tabla </button>
         </div>
       </div>
     </div>
