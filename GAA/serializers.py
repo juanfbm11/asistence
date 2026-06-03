@@ -8,7 +8,7 @@ from personas.models import (
 
 
 # ══════════════════════════════════════════════
-#  USUARIO  (tu serializer existente, sin cambios)
+#  USUARIO  
 # ══════════════════════════════════════════════
 class UsuarioSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=False)
@@ -85,7 +85,7 @@ class UsuarioSerializer(serializers.ModelSerializer):
 
 
 # ══════════════════════════════════════════════
-#  PROFESOR  (tu serializer existente, sin cambios)
+#  PROFESOR  
 # ══════════════════════════════════════════════
 class ProfesorSerializer(serializers.ModelSerializer):
     usuario_id = serializers.IntegerField(source='usuario.id',       read_only=True)
@@ -126,7 +126,7 @@ class ProfesorSerializer(serializers.ModelSerializer):
 
 
 # ══════════════════════════════════════════════
-#  ESTUDIANTE  (tu serializer existente, sin cambios)
+#  ESTUDIANTE  
 # ══════════════════════════════════════════════
 class EstudianteSerializer(serializers.ModelSerializer):
     usuario_id = serializers.IntegerField(source='usuario.id',       read_only=True)

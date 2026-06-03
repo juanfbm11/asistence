@@ -1,219 +1,446 @@
-{% extends 'webapplication/base.html' %}
-{% load static %}
+{% extends 'webapplication/base.html' %} {% load static %} {% block title %}Mis
+Clases – Sistema de Asistencia QR{% endblock %} {% block nav_clases %}active{%
+endblock %} {% block extra_css %}
+<link rel="stylesheet" href="{% static 'webapplication/css/clases.css' %}" />
+<style>
+  .action-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 6px 14px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s;
+  }
+  .action-chip.blue {
+    background: rgba(59, 116, 245, 0.08);
+    color: var(--blue-light);
+  }
+  .action-chip.blue:hover {
+    background: rgba(59, 116, 245, 0.16);
+  }
+  .action-chip.green {
+    background: rgba(0, 196, 154, 0.08);
+    color: var(--green);
+  }
+  .action-chip.green:hover {
+    background: rgba(0, 196, 154, 0.16);
+  }
 
-{% block title %}Mis Clases – Sistema de Asistencia QR{% endblock %}
-{% block nav_clases %}active{% endblock %}
+  .clase-card {
+    background: var(--card-bg);
+    border-radius: 18px;
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-md);
+    overflow: hidden;
+    transition:
+      transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
+      box-shadow 0.25s;
+    animation: fadeUp 0.4s ease both;
+  }
+  .clase-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-lg);
+  }
 
-{% block extra_css %}
-<link rel="stylesheet" href="{% static 'webapplication/css/clases.css' %}">
-{% endblock %}
+  .clase-card-top {
+    padding: 22px 22px 18px;
+    position: relative;
+    overflow: hidden;
+  }
+  .clase-card-top::before {
+    content: "";
+    position: absolute;
+    top: -30px;
+    right: -30px;
+    width: 100px;
+    height: 100px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 50%;
+  }
+  .clase-card-top::after {
+    content: "";
+    position: absolute;
+    bottom: -20px;
+    left: 20px;
+    width: 60px;
+    height: 60px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 50%;
+  }
+  .clase-icon {
+    font-size: 28px;
+    margin-bottom: 10px;
+    position: relative;
+    z-index: 1;
+  }
+  .clase-nombre {
+    font-family: "Space Grotesk", sans-serif;
+    font-size: 17px;
+    font-weight: 700;
+    color: white;
+    position: relative;
+    z-index: 1;
+  }
+  .clase-colegio {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.6);
+    margin-top: 4px;
+    position: relative;
+    z-index: 1;
+  }
 
-{% block content %}
+  .clase-card-body {
+    padding: 16px 20px 20px;
+  }
+  .clase-stat-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  .clase-stat-label {
+    font-size: 12px;
+    color: var(--text-soft);
+  }
+  .clase-stat-val {
+    font-family: "Space Grotesk", sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--navy);
+  }
+  .clase-stat-val.green {
+    color: var(--green);
+  }
+
+  .clase-progress-track {
+    height: 6px;
+    background: var(--surface);
+    border-radius: 10px;
+    margin-bottom: 16px;
+    overflow: hidden;
+  }
+  .clase-progress-fill {
+    height: 100%;
+    border-radius: 10px;
+    background: linear-gradient(90deg, var(--green), #00d4a0);
+  }
+
+  .clase-actions {
+    display: flex;
+    gap: 8px;
+  }
+  .clase-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    padding: 9px;
+    border-radius: 10px;
+    font-family: "DM Sans", sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    text-decoration: none;
+    transition: all 0.2s;
+  }
+  .clase-btn.lista {
+    background: rgba(59, 116, 245, 0.08);
+    color: var(--blue-light);
+  }
+  .clase-btn.lista:hover {
+    background: rgba(59, 116, 245, 0.16);
+  }
+  .clase-btn.qr {
+    background: rgba(0, 196, 154, 0.08);
+    color: var(--green);
+  }
+  .clase-btn.qr:hover {
+    background: rgba(0, 196, 154, 0.16);
+  }
+
+  .empty-clases {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-soft);
+    background: var(--card-bg);
+    border-radius: 18px;
+    border: 1px solid var(--border);
+  }
+  .empty-clases p {
+    margin-top: 12px;
+    font-size: 14px;
+  }
+
+  .navy {
+    color: var(--navy);
+  }
+  .blue {
+    color: var(--blue-light);
+  }
+  .green {
+    color: var(--green);
+  }
+</style>
+{% endblock %} {% block content %}
 <div class="page">
+  <div class="page-header">
+    <div>
+      <a href="{% url 'inicio' %}" class="back-link">← Volver al inicio</a>
+      <h1>📚 Mis Clases</h1>
+    </div>
+  </div>
 
-    <div class="page-header">
-        <div>
-            <a href="{% url 'inicio' %}" class="back-link">← Volver al inicio</a>
-            <h1>📚 Mis Clases</h1>
+  <!-- Carnet + Resumen -->
+  <div class="top-grid">
+    <!-- CARNET -->
+    <div class="prof-card">
+      <div class="prof-card-header">
+        <div class="prof-badge">
+          {% if usuario.rol == 'profesor' %}Docente Activo {% elif usuario.rol
+          == 'estudiante' %}Estudiante Activo {% else %}Administrador{% endif %}
         </div>
+        <div class="prof-avatar-row">
+          <div class="prof-avatar">
+            {{ usuario.nombre|slice:":1" }}{{ usuario.apellido|slice:":1" }}
+          </div>
+          <div>
+            <div class="prof-name">
+              {% if usuario.rol == 'profesor' %}Prof. {% endif %} {{
+              usuario.nombre }} {{ usuario.apellido }}
+            </div>
+            <div class="prof-sub">{{ usuario.rol|title }}</div>
+          </div>
+        </div>
+      </div>
+      <div class="prof-card-body">
+        <div class="prof-info-list">
+          <div class="prof-info-item">
+            <div class="prof-info-icon">🏫</div>
+            <div>
+              <div class="pil">Institución</div>
+              <div class="piv">
+                {% if perfil %}{{ perfil.colegio }}{% else %}No registrada{%
+                endif %}
+              </div>
+            </div>
+          </div>
+          <div class="prof-info-item">
+            <div class="prof-info-icon">🆔</div>
+            <div>
+              <div class="pil">ID</div>
+              <div class="piv">#{{ usuario.id }}</div>
+            </div>
+          </div>
+          {% if usuario.rol == 'profesor' and perfil %}
+          <div class="prof-info-item">
+            <div class="prof-info-icon">📅</div>
+            <div>
+              <div class="pil">Turno</div>
+              <div class="piv">{{ perfil.turno|title }}</div>
+            </div>
+          </div>
+          {% endif %}
+        </div>
+        <div class="prof-stats">
+          <div class="prof-stat">
+            <div class="psv">
+              {% if perfil and perfil.clases %}1{% else %}0{% endif %}
+            </div>
+            <div class="psl">Clases</div>
+          </div>
+          <div class="prof-stat">
+            <div class="psv">91%</div>
+            <div class="psl">Asistencia</div>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <!-- Carnet compacto + Resumen -->
-    <div class="top-grid">
-        <div class="prof-card">
-            <div class="prof-card-header">
-                <div class="prof-badge">
-                    {% if usuario.rol == 'profesor' %}
-                        Docente Activo
-                    {% elif usuario.rol == 'estudiante' %}
-                        Estudiante Activo
-                    {% else %}
-                        Administrador
-                    {% endif %}
-                </div>
-                <div class="prof-avatar-row">
-                    <div class="prof-avatar">
-                        {{ usuario.nombre|slice:":1" }}{{ usuario.apellido|slice:":1" }}
-                    </div>
-                    <div>
-                        <div class="prof-name">
-                            {% if usuario.rol == 'profesor' %}
-                                Prof.
-                            {% endif %}
-                            {{ usuario.nombre }} {{ usuario.apellido }}
-                        </div>
-                        <div class="prof-sub">
-                            {{ usuario.rol|title }}
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="prof-card-body">
-                <div class="prof-info-list">
-                    <div class="prof-info-item">
-                        <div class="prof-info-icon">🏫</div>
-                        <div><div class="pil">Institución</div>
-                            <div class="piv">
-                               {% if perfil %}
-                                    {{ perfil.colegio }}
-                                {% else %}
-                                    No registrada
-                                {% endif %}
-                            </div>
-                        </div>
-                    </div>
-                    <div class="prof-info-item">
-                        <div class="prof-info-icon">🆔</div>
-                        <div><div class="pil">ID Docente</div>
-                            <div class="piv">#{{ usuario.id }}</div></div>
-                    </div>
-                    {% if usuario.rol == 'profesor' %}
-                    <div class="prof-info-item">
-                        <div class="prof-info-icon">📅</div>
-                        <div><div class="pil">Turno</div>
-                            <div class="piv">{{ perfil.turno }}</div></div>
-                    </div>
-                    {% endif %}
-                </div>
-                <div class="prof-stats">
-                    <div class="prof-stat">
-                        <div class="psv">
-                            {% if perfil and perfil.clases %}
-                                1
-                            {% else %}
-                                0
-                            {% endif %}
-                        </div>
-                        <div class="psl">Alumnos</div></div>
-                    <div class="prof-stat">
-                        <div class="psv">{{ usuario.id }}</div>
-                        <div class="psl">Materias</div></div>
-                </div>
-            </div>
+    <!-- RESUMEN + FILTROS -->
+    <div class="summary-col">
+      <div class="summary-top">
+        <div class="s-card">
+          <div class="s-card-label">Total Clases</div>
+          <div class="s-card-value navy">
+            {% if perfil and perfil.clases %}1{% else %}0{% endif %}
+          </div>
+          <div class="s-card-sub">este semestre</div>
         </div>
-
-        <div class="summary-col">
-            <div class="summary-top">
-                <div class="s-card">
-                    <div class="s-card-label">Total Clases</div>
-                    <div class="s-card-value navy">
-                        {% if perfil and perfil.clases %}
-                            1
-                        {% else %}
-                            0
-                        {% endif %}
-                    </div>
-                    <div class="s-card-sub">este semestre</div>
-                </div>
-                <div class="s-card">
-                    <div class="s-card-label">Total Alumnos</div>
-                    <div class="s-card-value blue">{{ usuario.id }}</div>
-                    <div class="s-card-sub">{{ usuario.rol }}</div>
-                </div>
-                <div class="s-card">
-                    <div class="s-card-label">Asistencia</div>
-                    <div class="s-card-value green">91<span>%</span></div>
-                    <div class="s-card-sub">promedio</div>
-                </div>
-            </div>
-            <div class="filter-bar">
-                <div class="search-box">
-                    <span>🔍</span>
-                    <input type="text" placeholder="Buscar materia o código..." id="searchInput" oninput="filtrar()">
-                </div>
-                <select class="filter-select" id="sortSelect" onchange="filtrar()">
-                    <option value="nombre">Ordenar por nombre</option>
-                    <option value="alumnos">Ordenar por alumnos</option>
-                    <option value="codigo">Ordenar por código</option>
-                </select>
-                <div class="view-toggle">
-                    <button class="vtbtn active" id="vCards" onclick="setView('cards')">⊞ Tarjetas</button>
-                    <button class="vtbtn" id="vTable" onclick="setView('table')">☰ Tabla</button>
-                </div>
-            </div>
+        <div class="s-card">
+          <div class="s-card-label">Colegio</div>
+          <div
+            class="s-card-value blue"
+            style="font-size: 14px; margin-top: 6px">
+            {% if perfil %}{{ perfil.colegio|truncatechars:15 }}{% else %}—{%
+            endif %}
+          </div>
+          <div class="s-card-sub">institución</div>
         </div>
+        <div class="s-card">
+          <div class="s-card-label">Asistencia</div>
+          <div class="s-card-value green">
+            91<span style="font-size: 14px">%</span>
+          </div>
+          <div class="s-card-sub">promedio</div>
+        </div>
+      </div>
+      <div class="filter-bar">
+        <div class="search-box">
+          <span>🔍</span>
+          <input
+            type="text"
+            placeholder="Buscar clase..."
+            id="searchInput"
+            oninput="filtrarCards()" />
+        </div>
+        <div class="view-toggle">
+          <button class="vtbtn active" id="vCards" onclick="setView('cards')">
+            ⊞ Tarjetas
+          </button>
+          <button class="vtbtn" id="vTable" onclick="setView('table')">
+            ☰ Tabla
+          </button>
+        </div>
+      </div>
     </div>
+  </div>
 
-    <!-- Cards view -->
-    <div class="section-header">
-        <h2>📋 Clases Programadas</h2>
-    </div>
+  <!-- SECCIÓN CARDS -->
+  <div class="section-header">
+    <h2>📋 Clases Programadas</h2>
+  </div>
 
-    <div class="classes-grid" id="cardsView"></div>
-
-    <!-- Table view -->
-    {% if perfil %}
-    <div class="main-card" id="tableView">
-        <div class="main-card-header"><h3>{{ perfil.clases }}</h3>
-        <p>
-                {% if usuario.rol == 'profesor' %}
-                    Clase asignada para impartir
-                {% else %}
-                    Clase matriculada
-                {% endif %}
-            </p>
-
-            {% if usuario.rol == 'profesor' %}
-            <a href="{% url 'codeqr' %}" class="action-chip blue">
-                Generar QR
-            </a>
-            {% endif %}
+  <!-- VISTA CARDS -->
+  <div class="classes-grid" id="cardsView">
+    {% if perfil and perfil.clases %}
+    <div class="clase-card" data-nombre="{{ perfil.clases }}">
+      <div
+        class="clase-card-top"
+        style="background: linear-gradient(135deg, #3b74f5, #2255cc)">
+        <div class="clase-icon">📖</div>
+        <div class="clase-nombre">{{ perfil.clases }}</div>
+        <div class="clase-colegio">{{ perfil.colegio }}</div>
+      </div>
+      <div class="clase-card-body">
+        <div class="clase-stat-row">
+          <span class="clase-stat-label">Asistencia promedio</span>
+          <span class="clase-stat-val green">91%</span>
+        </div>
+        {% if usuario.rol == 'profesor' %}
+        <div class="clase-stat-row">
+          <span class="clase-stat-label">Turno</span>
+          <span class="clase-stat-val">{{ perfil.turno|title }}</span>
         </div>
         {% endif %}
-    </div>
+        <div class="clase-progress-track">
+          <div class="clase-progress-fill" style="width: 91%"></div>
         </div>
-
-        <table>
-            <thead>
-                <tr>
-                    <th>Código</th>
-                    <th>Materia</th>
-                    <th>Alumnos</th>
-                    <th>Asistencia</th>
-                    <th>Acciones</th>
-                </tr>
-            </thead>
-            <tbody id="tableBody">
-             <tr>
-                    <td>#{{ usuario.id }}</td>
-                    <td>{{ usuario.nombre }} {{ usuario.apellido }}</td>
-
-                    <td>
-                        {% if perfil %}
-                            {{ perfil.clases }}
-                        {% endif %}
-                    </td>
-
-                    <td>
-                        {% if perfil %}
-                            {{ perfil.colegio }}
-                        {% endif %}
-                    </td>
-
-                    <td>
-                        <a href="{% url 'lista' %}" class="action-chip blue">
-                            Ver
-                        </a>
-
-                        {% if usuario.rol == 'profesor' %}
-                        <a href="{% url 'codeqr' %}" class="action-chip blue">
-                            QR
-                        </a>
-                        {% endif %}
-                    </td>
-                </tr>
-            </tbody>
-        </table>
+        <div class="clase-actions">
+          <a href="{% url 'lista' %}" class="clase-btn lista">📋 Lista</a>
+          {% if usuario.rol == 'profesor' %}
+          <a href="{% url 'codeqr' %}" class="clase-btn qr">📲 QR</a>
+          {% endif %}
+        </div>
+      </div>
     </div>
+    {% else %}
+    <div class="empty-clases" style="grid-column: 1/-1">
+      <div style="font-size: 48px">📚</div>
+      <p>No tienes clases asignadas aún.</p>
+      <p style="font-size: 12px; margin-top: 6px; color: var(--text-soft)">
+        Contacta al administrador para que te asigne una clase.
+      </p>
+    </div>
+    {% endif %}
+  </div>
 
+  <!-- VISTA TABLA -->
+  <div class="main-card" id="tableView">
+    <div class="main-card-header">
+      <h3>Todas las Clases</h3>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>Clase</th>
+          <th>Colegio</th>
+          {% if usuario.rol == 'profesor' %}
+          <th>Turno</th>
+          {% endif %}
+          <th>Asistencia</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if perfil and perfil.clases %}
+        <tr>
+          <td>
+            <strong style="color: var(--navy)">{{ perfil.clases }}</strong>
+          </td>
+          <td>{{ perfil.colegio }}</td>
+          {% if usuario.rol == 'profesor' %}
+          <td>{{ perfil.turno|title }}</td>
+          {% endif %}
+          <td>
+            <span style="color: var(--green); font-weight: 700">91%</span>
+          </td>
+          <td>
+            <div style="display: flex; gap: 6px">
+              <a href="{% url 'lista' %}" class="action-chip blue">Ver lista</a>
+              {% if usuario.rol == 'profesor' %}
+              <a href="{% url 'codeqr' %}" class="action-chip green">📲 QR</a>
+              {% endif %}
+            </div>
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td
+            colspan="5"
+            style="text-align: center; padding: 32px; color: var(--text-soft)">
+            No hay clases registradas
+          </td>
+        </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
 </div>
-{% endblock %}
-
-{% block extra_js %}
+{% endblock %} {% block extra_js %}
 <script>
-    // URLs de Django pasadas a JS de forma segura
-    const URL_LISTA  = "{% url 'lista' %}";
-    const URL_CODEQR = "{% url 'codeqr' %}";
+  const URL_LISTA = "{% url 'lista' %}";
+  const URL_CODEQR = "{% url 'codeqr' %}";
+
+  // ── TOGGLE VISTA ──
+  function setView(view) {
+    const cards = document.getElementById("cardsView");
+    const table = document.getElementById("tableView");
+    const btnCards = document.getElementById("vCards");
+    const btnTable = document.getElementById("vTable");
+
+    if (view === "cards") {
+      cards.style.display = "grid";
+      table.classList.remove("visible");
+      btnCards.classList.add("active");
+      btnTable.classList.remove("active");
+    } else {
+      cards.style.display = "none";
+      table.classList.add("visible");
+      btnCards.classList.remove("active");
+      btnTable.classList.add("active");
+    }
+  }
+
+  // ── FILTRAR CARDS ──
+  function filtrarCards() {
+    const q = document.getElementById("searchInput").value.toLowerCase();
+    document.querySelectorAll(".clase-card").forEach((card) => {
+      const nombre = card.dataset.nombre.toLowerCase();
+      card.style.display = nombre.includes(q) ? "block" : "none";
+    });
+  }
 </script>
-<script src="{% static 'webapplication/js/clases.js' %}"></script>
 {% endblock %}

@@ -550,7 +550,7 @@ def reportes(request):
         'webapplication/reportes.html',
         context
     )
-    
+@rol_requerido('profesor', 'administrador')  
 def exportar_pdf(request):
 
     usuario = request.user
