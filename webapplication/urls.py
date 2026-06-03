@@ -45,5 +45,6 @@ urlpatterns = [
 
 
     path('api/auth/token/', obtain_auth_token),
+     path('reportes/exportar/', views.exportar_pdf,name='exportar_pdf'),
 ]
 

@@ -1,12 +1,17 @@
 ﻿from functools import wraps
 from django.contrib import messages
 from django.shortcuts import render, redirect, get_object_or_404
+from django.http import HttpResponse
 from django.contrib.auth import  login, logout
 from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.dateparse import parse_date
 from django.utils.text import slugify
 from django.utils import timezone
+from reportlab.platypus import ( SimpleDocTemplate,Paragraph,Spacer,Table,TableStyle)
+
+from reportlab.lib import colors
+from reportlab.lib.styles import getSampleStyleSheet
 
 from GAA.serializers import EstudianteSerializer, ProfesorSerializer, UsuarioSerializer
 from rest_framework import viewsets
@@ -545,6 +550,199 @@ def reportes(request):
         'webapplication/reportes.html',
         context
     )
+    
+def exportar_pdf(request):
+
+    usuario = request.user
+
+    profesor = Profesor.objects.filter(
+        usuario=usuario
+    ).first()
+
+    if not profesor:
+        return HttpResponse(
+            "No existe perfil de profesor."
+        )
+
+    response = HttpResponse(
+        content_type='application/pdf'
+    )
+
+    response['Content-Disposition'] = (
+        'attachment; filename="reporte_asistencia.pdf"'
+    )
+
+    doc = SimpleDocTemplate(response)
+
+    styles = getSampleStyleSheet()
+
+    elementos = []
+
+    # ----------------------------
+    # TITULO
+    # ----------------------------
+
+    elementos.append(
+        Paragraph(
+            "SISTEMA DE ASISTENCIA QR",
+            styles['Title']
+        )
+    )
+
+    elementos.append(
+        Paragraph(
+            "Reporte General de Asistencia",
+            styles['Heading2']
+        )
+    )
+
+    elementos.append(
+        Paragraph(
+            f"Profesor: {profesor.usuario.nombre} {profesor.usuario.apellido}",
+            styles['Normal']
+        )
+    )
+
+    elementos.append(
+        Paragraph(
+            f"Fecha: {timezone.now().strftime('%d/%m/%Y %H:%M')}",
+            styles['Normal']
+        )
+    )
+
+    elementos.append(Spacer(1,20))
+
+    # ----------------------------
+    # DATOS DEL PROFESOR
+    # ----------------------------
+
+    clases = Clase.objects.filter(
+        profesor=profesor
+    )
+
+    asistencias = Asistencia.objects.filter(
+        clase__in=clases
+    )
+
+    presentes = asistencias.filter(
+        estado='presente'
+    ).count()
+
+    ausentes = asistencias.filter(
+        estado='ausente'
+    ).count()
+
+    justificados = asistencias.filter(
+        estado='justificado'
+    ).count()
+
+    total_registros = asistencias.count()
+
+    promedio = 0
+
+    if total_registros > 0:
+
+        promedio = round(
+            presentes * 100 / total_registros,
+            1
+        )
+
+    # ----------------------------
+    # TABLA RESUMEN
+    # ----------------------------
+
+    resumen = [
+        ["Indicador", "Valor"],
+        ["Clases", clases.count()],
+        ["Registros", total_registros],
+        ["Presentes", presentes],
+        ["Ausentes", ausentes],
+        ["Justificados", justificados],
+        ["Asistencia Promedio", f"{promedio}%"],
+    ]
+
+    tabla = Table(resumen)
+
+    tabla.setStyle(TableStyle([
+        ('BACKGROUND',(0,0),(-1,0),colors.darkblue),
+        ('TEXTCOLOR',(0,0),(-1,0),colors.white),
+        ('GRID',(0,0),(-1,-1),1,colors.black),
+        ('FONTNAME',(0,0),(-1,0),'Helvetica-Bold')
+    ]))
+
+    elementos.append(tabla)
+
+    elementos.append(Spacer(1,20))
+
+    # ----------------------------
+    # DETALLE DE ESTUDIANTES
+    # ----------------------------
+
+    elementos.append(
+        Paragraph(
+            "Detalle de Estudiantes",
+            styles['Heading2']
+        )
+    )
+
+    datos = [
+        [
+            "Estudiante",
+            "Clase",
+            "Presentes",
+            "Ausentes",
+            "%"
+        ]
+    ]
+
+    for clase in clases:
+
+        for estudiante in clase.estudiantes.all():
+
+            pres = Asistencia.objects.filter(
+                estudiante=estudiante,
+                clase=clase,
+                estado='presente'
+            ).count()
+
+            aus = Asistencia.objects.filter(
+                estudiante=estudiante,
+                clase=clase,
+                estado='ausente'
+            ).count()
+
+            total = pres + aus
+
+            porcentaje = 0
+
+            if total > 0:
+                porcentaje = round(
+                    pres * 100 / total,
+                    1
+                )
+
+            datos.append([
+                f"{estudiante.usuario.nombre} {estudiante.usuario.apellido}",
+                clase.nombre,
+                str(pres),
+                str(aus),
+                f"{porcentaje}%"
+            ])
+
+    tabla_estudiantes = Table(datos)
+
+    tabla_estudiantes.setStyle(TableStyle([
+        ('BACKGROUND',(0,0),(-1,0),colors.grey),
+        ('TEXTCOLOR',(0,0),(-1,0),colors.white),
+        ('GRID',(0,0),(-1,-1),1,colors.black),
+        ('FONTNAME',(0,0),(-1,0),'Helvetica-Bold')
+    ]))
+
+    elementos.append(tabla_estudiantes)
+
+    doc.build(elementos)
+
+    return response
 
 
 # ── VISTA ADMINISTRADOR ────────────────────────────────────────────────

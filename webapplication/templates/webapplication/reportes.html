@@ -1,7 +1,7 @@
 {% extends 'webapplication/base.html' %}
 {% load static %}
 
-{% block title %}Reportes – Sistema de Asistencia QR{% endblock %}
+{% block title %}Reportes - Sistema de Asistencia QR{% endblock %}
 {% block nav_reportes %}active{% endblock %}
 
 {% block extra_css %}
@@ -25,9 +25,11 @@
             </p>
         </div>
 
-        <button class="export-btn" onclick="exportar()">
-            ⬇️ Exportar reporte
-        </button>
+        <button
+    class="export-btn"
+    onclick="window.location.href='{% url 'exportar_pdf' %}'">
+    ⬇️ Exportar reporte
+</button>
     </div>
 
     <!-- FILTROS -->
